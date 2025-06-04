@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigma BF Copy</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔷 Sigma BF Copy</h1>
+            <p>Sigma BFカメラからファイルをコピーします</p>
+        </header>
+
+        <!-- 初回設定ダイアログ -->
+        <div id="initial-setup" class="modal hidden">
+            <div class="modal-content">
+                <h2>初期設定</h2>
+                <p>写真と動画のコピー先フォルダを設定してください</p>
+                
+                <div class="setting-group">
+                    <label>写真コピー先:</label>
+                    <div class="folder-input">
+                        <input type="text" id="photo-destination" readonly>
+                        <button id="select-photo-btn">📁 選択</button>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>動画コピー先:</label>
+                    <div class="folder-input">
+                        <input type="text" id="video-destination" readonly>
+                        <button id="select-video-btn">📁 選択</button>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="save-initial-config" class="primary">設定を保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- メイン画面 -->
+        <main id="main-content" class="hidden">
+            <!-- カメラ検知状態 -->
+            <section class="camera-status">
+                <div id="camera-not-detected" class="status-card">
+                    <h3>📷 カメラを接続してください</h3>
+                    <p>Sigma BFカメラをUSBで接続してください</p>
+                    <button id="refresh-camera">🔄 再検索</button>
+                </div>
+                
+                <div id="camera-detected" class="status-card hidden">
+                    <h3>✅ Sigma BF カメラが見つかりました</h3>
+                    <p id="camera-info"></p>
+                </div>
+            </section>
+
+            <!-- フォルダ選択 -->
+            <section id="folder-selection" class="hidden">
+                <h3>📁 コピーするフォルダを選択</h3>
+                <div id="camera-folders" class="folder-list">
+                    <!-- 動的に生成されるフォルダリスト -->
+                </div>
+            </section>
+
+            <!-- コピー設定 -->
+            <section id="copy-settings" class="hidden">
+                <h3>⚙️ コピー設定</h3>
+                
+                <div class="setting-group">
+                    <label>フォルダ名:</label>
+                    <input type="text" id="folder-name" placeholder="例: 撮影セッション">
+                </div>
+                
+                <div class="setting-group">
+                    <label>現在の設定:</label>
+                    <div class="current-settings">
+                        <div>📸 写真: <span id="current-photo-dest"></span></div>
+                        <div>🎥 動画: <span id="current-video-dest"></span></div>
+                    </div>
+                    <button id="change-settings">設定変更</button>
+                </div>
+                
+                <div class="copy-actions">
+                    <button id="start-copy" class="primary">📋 コピー開始</button>
+                </div>
+            </section>
+
+            <!-- 進行状況 -->
+            <section id="progress-section" class="hidden">
+                <h3>📊 コピー進行状況</h3>
+                <div class="progress-bar">
+                    <div id="progress-fill"></div>
+                </div>
+                <div id="progress-text">0%</div>
+                <div id="progress-details"></div>
+            </section>
+        </main>
+
+        <!-- 設定画面 -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>設定変更</h2>
+                
+                <div class="setting-group">
+                    <label>写真コピー先:</label>
+                    <div class="folder-input">
+                        <input type="text" id="settings-photo-dest" readonly>
+                        <button id="settings-select-photo">📁 選択</button>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>動画コピー先:</label>
+                    <div class="folder-input">
+                        <input type="text" id="settings-video-dest" readonly>
+                        <button id="settings-select-video">📁 選択</button>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="cancel-settings">キャンセル</button>
+                    <button id="save-settings" class="primary">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

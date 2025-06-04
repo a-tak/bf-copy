@@ -1,0 +1,273 @@
+/* 基本スタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ヘッダー */
+header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* カード */
+.status-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.status-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: #4a5568;
+}
+
+/* セクション */
+section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: #2d3748;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+/* 設定グループ */
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #4a5568;
+}
+
+.folder-input {
+    display: flex;
+    gap: 10px;
+}
+
+.folder-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* ボタン */
+button {
+    background: #4299e1;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background: #3182ce;
+}
+
+button.primary {
+    background: #38a169;
+    font-size: 16px;
+    padding: 12px 24px;
+}
+
+button.primary:hover {
+    background: #2f855a;
+}
+
+/* フォルダリスト */
+.folder-list {
+    display: grid;
+    gap: 10px;
+}
+
+.folder-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.folder-item:hover {
+    background: #f7fafc;
+    border-color: #4299e1;
+}
+
+.folder-item.selected {
+    background: #ebf8ff;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.folder-info h4 {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.folder-info p {
+    font-size: 14px;
+    color: #718096;
+}
+
+/* 進行状況バー */
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+#progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4299e1, #38a169);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+#progress-text {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+#progress-details {
+    font-size: 14px;
+    color: #718096;
+}
+
+/* 現在の設定表示 */
+.current-settings {
+    background: #f7fafc;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.current-settings div {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+/* モーダル */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    min-width: 500px;
+    max-width: 90vw;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+}
+
+/* アクション */
+.copy-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+/* ユーティリティ */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .modal-content {
+        min-width: auto;
+        padding: 20px;
+    }
+    
+    .folder-input {
+        flex-direction: column;
+    }
+    
+    .copy-actions {
+        flex-direction: column;
+    }
+}
