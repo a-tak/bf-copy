@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sigma BF Copy Icon Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .icon-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .icon-preview {
+            text-align: center;
+        }
+        .icon-size {
+            margin: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        svg {
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sigma BF Copy アイコン</h1>
+    <p>右クリック → 名前を付けて保存 で各サイズのアイコンを保存してください</p>
+    
+    <div class="icon-container">
+        <!-- 512x512 (macOS用) -->
+        <div class="icon-preview">
+            <div class="icon-size">
+                <h3>512x512 (macOS)</h3>
+                <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <!-- グラデーション背景 -->
+                    <defs>
+                        <linearGradient id="bg512" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="camera512" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#2d3748;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1a202c;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- 背景円 -->
+                    <circle cx="256" cy="256" r="240" fill="url(#bg512)"/>
+                    
+                    <!-- カメラボディ -->
+                    <rect x="120" y="200" width="272" height="180" rx="20" fill="url(#camera512)"/>
+                    
+                    <!-- レンズ外側 -->
+                    <circle cx="256" cy="290" r="70" fill="#4a5568"/>
+                    
+                    <!-- レンズ内側 -->
+                    <circle cx="256" cy="290" r="50" fill="#2d3748"/>
+                    <circle cx="256" cy="290" r="30" fill="#1a202c"/>
+                    
+                    <!-- フラッシュ -->
+                    <rect x="320" y="210" width="30" height="15" rx="3" fill="#f7fafc"/>
+                    
+                    <!-- ファインダー -->
+                    <rect x="220" y="180" width="72" height="25" rx="5" fill="#4a5568"/>
+                    
+                    <!-- BFロゴ -->
+                    <text x="256" y="440" text-anchor="middle" fill="white" font-family="Arial Black" font-size="48" font-weight="bold">BF</text>
+                    
+                    <!-- SIGMA ロゴ -->
+                    <text x="256" y="470" text-anchor="middle" fill="white" font-family="Arial" font-size="20" opacity="0.8">SIGMA</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 256x256 -->
+        <div class="icon-preview">
+            <div class="icon-size">
+                <h3>256x256</h3>
+                <svg width="256" height="256" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 同じデザインを再利用 -->
+                    <circle cx="256" cy="256" r="240" fill="url(#bg512)"/>
+                    <rect x="120" y="200" width="272" height="180" rx="20" fill="url(#camera512)"/>
+                    <circle cx="256" cy="290" r="70" fill="#4a5568"/>
+                    <circle cx="256" cy="290" r="50" fill="#2d3748"/>
+                    <circle cx="256" cy="290" r="30" fill="#1a202c"/>
+                    <rect x="320" y="210" width="30" height="15" rx="3" fill="#f7fafc"/>
+                    <rect x="220" y="180" width="72" height="25" rx="5" fill="#4a5568"/>
+                    <text x="256" y="440" text-anchor="middle" fill="white" font-family="Arial Black" font-size="48" font-weight="bold">BF</text>
+                    <text x="256" y="470" text-anchor="middle" fill="white" font-family="Arial" font-size="20" opacity="0.8">SIGMA</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 128x128 -->
+        <div class="icon-preview">
+            <div class="icon-size">
+                <h3>128x128</h3>
+                <svg width="128" height="128" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="256" cy="256" r="240" fill="url(#bg512)"/>
+                    <rect x="120" y="200" width="272" height="180" rx="20" fill="url(#camera512)"/>
+                    <circle cx="256" cy="290" r="70" fill="#4a5568"/>
+                    <circle cx="256" cy="290" r="50" fill="#2d3748"/>
+                    <circle cx="256" cy="290" r="30" fill="#1a202c"/>
+                    <rect x="320" y="210" width="30" height="15" rx="3" fill="#f7fafc"/>
+                    <rect x="220" y="180" width="72" height="25" rx="5" fill="#4a5568"/>
+                    <text x="256" y="440" text-anchor="middle" fill="white" font-family="Arial Black" font-size="48" font-weight="bold">BF</text>
+                    <text x="256" y="470" text-anchor="middle" fill="white" font-family="Arial" font-size="20" opacity="0.8">SIGMA</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 64x64 -->
+        <div class="icon-preview">
+            <div class="icon-size">
+                <h3>64x64</h3>
+                <svg width="64" height="64" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="256" cy="256" r="240" fill="url(#bg512)"/>
+                    <rect x="120" y="200" width="272" height="180" rx="20" fill="url(#camera512)"/>
+                    <circle cx="256" cy="290" r="70" fill="#4a5568"/>
+                    <circle cx="256" cy="290" r="50" fill="#2d3748"/>
+                    <circle cx="256" cy="290" r="30" fill="#1a202c"/>
+                    <rect x="320" y="210" width="30" height="15" rx="3" fill="#f7fafc"/>
+                    <rect x="220" y="180" width="72" height="25" rx="5" fill="#4a5568"/>
+                    <text x="256" y="440" text-anchor="middle" fill="white" font-family="Arial Black" font-size="48" font-weight="bold">BF</text>
+                    <text x="256" y="470" text-anchor="middle" fill="white" font-family="Arial" font-size="20" opacity="0.8">SIGMA</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 32x32 -->
+        <div class="icon-preview">
+            <div class="icon-size">
+                <h3>32x32</h3>
+                <svg width="32" height="32" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="256" cy="256" r="240" fill="url(#bg512)"/>
+                    <rect x="120" y="200" width="272" height="180" rx="20" fill="url(#camera512)"/>
+                    <circle cx="256" cy="290" r="70" fill="#4a5568"/>
+                    <circle cx="256" cy="290" r="50" fill="#2d3748"/>
+                    <circle cx="256" cy="290" r="30" fill="#1a202c"/>
+                    <text x="256" y="440" text-anchor="middle" fill="white" font-family="Arial Black" font-size="48" font-weight="bold">BF</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 16x16 -->
+        <div class="icon-preview">
+            <div class="icon-size">
+                <h3>16x16</h3>
+                <svg width="16" height="16" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="256" cy="256" r="240" fill="url(#bg512)"/>
+                    <rect x="120" y="200" width="272" height="180" rx="20" fill="url(#camera512)"/>
+                    <circle cx="256" cy="290" r="70" fill="#4a5568"/>
+                    <circle cx="256" cy="290" r="50" fill="#2d3748"/>
+                    <text x="256" y="440" text-anchor="middle" fill="white" font-family="Arial Black" font-size="48" font-weight="bold">BF</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SVGをPNGに変換する関数
+        function downloadSVGasPNG(svg, filename, width, height) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(function(blob) {
+                    const a = document.createElement('a');
+                    a.download = filename;
+                    a.href = URL.createObjectURL(blob);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(a.href);
+                });
+            };
+            
+            img.src = url;
+        }
+
+        // ダブルクリックでPNG保存
+        document.querySelectorAll('svg').forEach((svg, index) => {
+            svg.addEventListener('dblclick', function() {
+                const sizes = [512, 256, 128, 64, 32, 16];
+                const size = sizes[index];
+                downloadSVGasPNG(svg, `sigma-bf-icon-${size}.png`, size, size);
+            });
+        });
+    </script>
+</body>
+</html>

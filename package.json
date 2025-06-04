@@ -39,11 +39,11 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "assets/sigma-bf-icon-256.png"
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "icon": "assets/sigma-bf-icon-512.png"
     },
     "nsis": {
       "oneClick": false,
