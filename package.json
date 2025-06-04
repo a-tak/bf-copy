@@ -9,7 +9,9 @@
     "build": "electron-builder",
     "build-win": "electron-builder --win",
     "build-mac": "electron-builder --mac",
-    "pack": "electron-builder --dir"
+    "pack": "electron-builder --dir",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [
     "electron",
@@ -21,7 +23,13 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^26.0.0",
-    "electron-builder": "^24.6.0"
+    "electron-builder": "^24.6.0",
+    "jest": "^29.0.0",
+    "jest-environment-node": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "babel-jest": "^29.0.0"
   },
   "dependencies": {
     "fs-extra": "^11.1.1"

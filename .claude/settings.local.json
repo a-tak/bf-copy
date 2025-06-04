@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git config:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)",
+      "Bash(npm run dev:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(cmd.exe /c \"cd /d D:\\Documents\\GitHub\\bf-copy && npm install\")",
+      "Bash(cmd.exe /c \"cd /d D:\\Documents\\GitHub\\bf-copy && npm run dev\")"
+    ],
+    "deny": []
+  }
+}
