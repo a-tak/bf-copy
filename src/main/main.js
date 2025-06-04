@@ -277,8 +277,22 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
     // ソースフォルダからファイル一覧を取得
     const sourceFiles = await fs.readdir(sourceFolderPath);
     
+    // 実際にコピーするファイル数を事前に計算
+    let totalFilesToCopy = 0;
+    for (const fileName of sourceFiles) {
+      const sourceFilePath = path.join(sourceFolderPath, fileName);
+      try {
+        const stats = await fs.stat(sourceFilePath);
+        if (stats.isFile()) {
+          totalFilesToCopy++;
+        }
+      } catch (error) {
+        // ファイルアクセスエラーは無視
+      }
+    }
+    
     const copyResults = {
-      totalFiles: 0,
+      totalFiles: totalFilesToCopy,
       copiedPhotos: 0,
       copiedVideos: 0,
       errors: [],
@@ -293,8 +307,6 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
       const stats = await fs.stat(sourceFilePath);
       
       if (!stats.isFile()) continue;
-
-      copyResults.totalFiles++;
       
       // ファイル拡張子で写真/動画を判定
       const ext = path.extname(fileName).toLowerCase();
@@ -331,9 +343,9 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
         // 進行状況を送信
         mainWindow.webContents.send('copy-progress', {
           current: copiedCount,
-          total: copyResults.totalFiles,
+          total: totalFilesToCopy,
           fileName: fileName,
-          percentage: Math.round((copiedCount / copyResults.totalFiles) * 100)
+          percentage: Math.round((copiedCount / totalFilesToCopy) * 100)
         });
         
         console.log(`コピー完了: ${fileName} -> ${isPhoto ? '写真' : '動画'}`);
