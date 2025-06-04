@@ -11,7 +11,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // カメラ検知
   detectSigmaCamera: () => ipcRenderer.invoke('detect-sigma-camera'),
   
+  // カメラフォルダ取得
+  getCameraFolders: (cameraPath) => ipcRenderer.invoke('get-camera-folders', cameraPath),
+  
   // ファイルコピー
   copyFiles: (sourceFolder, photoDestination, videoDestination, folderName) => 
-    ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName)
+    ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName),
+  
+  // 進行状況イベント
+  onCopyProgress: (callback) => ipcRenderer.on('copy-progress', callback)
 });

@@ -24,9 +24,7 @@
     "electron-builder": "^24.6.0"
   },
   "dependencies": {
-    "drivelist": "^11.1.0",
-    "fs-extra": "^11.1.1",
-    "node-usb-detection": "^6.1.0"
+    "fs-extra": "^11.1.1"
   },
   "build": {
     "appId": "com.atak.sigma-bf-copy",

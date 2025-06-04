@@ -2,12 +2,14 @@ class SigmaBFCopy {
     constructor() {
         this.config = null;
         this.selectedFolder = null;
+        this.cameraInfo = null;
         this.init();
     }
 
     async init() {
         await this.loadConfig();
         this.setupEventListeners();
+        this.setupCopyProgressListener();
         
         if (!this.config || this.config.isFirstRun !== false) {
             this.showInitialSetup();
@@ -15,6 +17,24 @@ class SigmaBFCopy {
             this.showMainContent();
             this.updateCurrentSettings();
             this.startCameraDetection();
+        }
+    }
+
+    setupCopyProgressListener() {
+        window.electronAPI.onCopyProgress((event, progressData) => {
+            this.updateProgress(progressData);
+        });
+    }
+
+    updateProgress(progressData) {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const progressDetails = document.getElementById('progress-details');
+
+        if (progressFill && progressText && progressDetails) {
+            progressFill.style.width = `${progressData.percentage}%`;
+            progressText.textContent = `${progressData.percentage}%`;
+            progressDetails.textContent = `${progressData.fileName} (${progressData.current}/${progressData.total})`;
         }
     }
 
@@ -109,12 +129,21 @@ class SigmaBFCopy {
     async startCameraDetection() {
         console.log('カメラ検知開始...');
         
-        // TODO: 実際のカメラ検知ロジックを実装
-        // 現在はテスト用の動作
-        setTimeout(() => {
-            // テスト用: カメラが見つからない状態をシミュレート
+        try {
+            const cameraInfo = await window.electronAPI.detectSigmaCamera();
+            
+            if (cameraInfo) {
+                console.log('Sigma BFカメラが見つかりました:', cameraInfo);
+                this.cameraInfo = cameraInfo;
+                this.showCameraDetected(`${cameraInfo.drive}:\\ - ${cameraInfo.label}`);
+            } else {
+                console.log('Sigma BFカメラが見つかりません');
+                this.showCameraNotDetected();
+            }
+        } catch (error) {
+            console.error('カメラ検知エラー:', error);
             this.showCameraNotDetected();
-        }, 1000);
+        }
     }
 
     showCameraNotDetected() {
@@ -133,18 +162,29 @@ class SigmaBFCopy {
     }
 
     async loadCameraFolders() {
-        // TODO: カメラのDCIMフォルダからフォルダリストを取得
         console.log('カメラフォルダ読み込み...');
+        console.log('this.cameraInfo:', this.cameraInfo);
         
-        // テスト用のフォルダリスト
-        const testFolders = [
-            { name: '250518_0', files: 45, date: '2025-05-18' },
-            { name: '250517_0', files: 32, date: '2025-05-17' },
-            { name: '250516_0', files: 28, date: '2025-05-16' }
-        ];
+        if (!this.cameraInfo) {
+            console.error('カメラ情報がありません');
+            return;
+        }
         
-        this.displayFolderList(testFolders);
-        document.getElementById('folder-selection').classList.remove('hidden');
+        try {
+            const folders = await window.electronAPI.getCameraFolders(this.cameraInfo.path);
+            
+            if (folders.length > 0) {
+                console.log('カメラフォルダ一覧:', folders);
+                this.displayFolderList(folders);
+                document.getElementById('folder-selection').classList.remove('hidden');
+            } else {
+                console.log('カメラにフォルダが見つかりませんでした');
+                // フォルダが見つからない場合の処理
+                document.getElementById('folder-selection').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('カメラフォルダ読み込みエラー:', error);
+        }
     }
 
     displayFolderList(folders) {
@@ -157,7 +197,7 @@ class SigmaBFCopy {
             folderElement.innerHTML = `
                 <div class="folder-info">
                     <h4>📁 ${folder.name}</h4>
-                    <p>${folder.date} - ${folder.files} ファイル</p>
+                    <p>${folder.date} - ${folder.files} ファイル (${folder.size})</p>
                 </div>
                 <div class="folder-select">
                     <button>選択</button>
@@ -205,38 +245,41 @@ class SigmaBFCopy {
         // 進行状況セクションを表示
         document.getElementById('progress-section').classList.remove('hidden');
         
-        // TODO: 実際のファイルコピー処理を実装
-        console.log('コピー開始:', {
-            sourceFolder: this.selectedFolder.name,
-            folderName: folderName,
-            photoDestination: this.config.photoDestination,
-            videoDestination: this.config.videoDestination
-        });
+        try {
+            console.log('コピー開始:', {
+                sourceFolderPath: this.selectedFolder.path,
+                folderName: folderName,
+                photoDestination: this.config.photoDestination,
+                videoDestination: this.config.videoDestination
+            });
 
-        // テスト用の進行状況シミュレート
-        this.simulateProgress();
-    }
+            console.log('呼び出しパラメータ:', {
+                sourceFolderPath: this.selectedFolder.path,
+                photoDestination: this.config.photoDestination,
+                videoDestination: this.config.videoDestination,
+                folderName: folderName
+            });
 
-    simulateProgress() {
-        let progress = 0;
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-        const progressDetails = document.getElementById('progress-details');
+            const result = await window.electronAPI.copyFiles(
+                this.selectedFolder.path,
+                this.config.photoDestination,
+                this.config.videoDestination,
+                folderName
+            );
 
-        const interval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                progressDetails.textContent = 'コピー完了しました！';
+            console.log('コピー結果:', result);
+
+            if (result.success) {
+                alert(`コピーが完了しました！\n\n写真: ${result.copiedPhotos}ファイル\n動画: ${result.copiedVideos}ファイル\n\n写真: ${result.photoDestPath}\n動画: ${result.videoDestPath}`);
             } else {
-                progressDetails.textContent = `ファイルをコピー中... (${Math.floor(progress)}/${100})`;
+                alert(`コピーに失敗しました: ${result.message}`);
             }
-
-            progressFill.style.width = `${progress}%`;
-            progressText.textContent = `${Math.floor(progress)}%`;
-        }, 200);
+        } catch (error) {
+            console.error('コピーエラー:', error);
+            alert(`コピー中にエラーが発生しました: ${error.message}`);
+        }
     }
+
 
     showSettingsModal() {
         document.getElementById('settings-photo-dest').value = this.config.photoDestination;
