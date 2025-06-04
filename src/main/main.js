@@ -87,6 +87,90 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
   try {
     const result = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName);
     
+    // 実際にコピーするファイル数を事前に計算
+    let totalFilesToCopy = 0;
+    for (const fileName of sourceFiles) {
+      const sourceFilePath = path.join(sourceFolderPath, fileName);
+      try {
+        const stats = await fs.stat(sourceFilePath);
+        if (stats.isFile()) {
+          totalFilesToCopy++;
+        }
+      } catch (error) {
+        // ファイルアクセスエラーは無視
+      }
+    }
+    
+    const copyResults = {
+      totalFiles: totalFilesToCopy,
+      copiedPhotos: 0,
+      copiedVideos: 0,
+      errors: [],
+      photoDestPath,
+      videoDestPath
+    };
+
+    let copiedCount = 0;
+
+    for (const fileName of sourceFiles) {
+      const sourceFilePath = path.join(sourceFolderPath, fileName);
+      const stats = await fs.stat(sourceFilePath);
+      
+      if (!stats.isFile()) continue;
+      
+      // ファイル拡張子で写真/動画を判定
+      const ext = path.extname(fileName).toLowerCase();
+      let destPath;
+      let isPhoto = false;
+      
+      if (['.jpg', '.jpeg', '.dng', '.raw', '.tiff', '.tif', '.heif', '.heic'].includes(ext)) {
+        destPath = path.join(photoDestPath, fileName);
+        isPhoto = true;
+      } else if (['.mov', '.mp4', '.avi', '.mkv', '.m4v'].includes(ext)) {
+        destPath = path.join(videoDestPath, fileName);
+        isPhoto = false;
+      } else {
+        // 不明な拡張子は写真として扱う
+        destPath = path.join(photoDestPath, fileName);
+        isPhoto = true;
+      }
+
+      try {
+        // ファイルコピー
+        await fs.copy(sourceFilePath, destPath, { 
+          overwrite: false, // 既存ファイルは上書きしない
+          errorOnExist: false 
+        });
+        
+        if (isPhoto) {
+          copyResults.copiedPhotos++;
+        } else {
+          copyResults.copiedVideos++;
+        }
+        
+        copiedCount++;
+        
+        // 進行状況を送信
+        mainWindow.webContents.send('copy-progress', {
+          current: copiedCount,
+          total: totalFilesToCopy,
+          fileName: fileName,
+          percentage: Math.round((copiedCount / totalFilesToCopy) * 100)
+        });
+        
+        console.log(`コピー完了: ${fileName} -> ${isPhoto ? '写真' : '動画'}`);
+        
+      } catch (error) {
+        console.error(`ファイルコピーエラー: ${fileName}`, error);
+        copyResults.errors.push({
+          fileName,
+          error: error.message
+        });
+      }
+    }
+
+    console.log('コピー結果:', copyResults);
+
     // 進行状況通知機能は後で追加可能
     // 現在はシンプルな実装でテストを通す
     
