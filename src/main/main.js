@@ -1,9 +1,11 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 const os = require('os');
 
 let mainWindow;
+let tray = null;
+let isQuiting = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -14,7 +16,8 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../../assets/sigma-bf-icon-256.png')
+    icon: path.join(__dirname, '../../assets/sigma-bf-icon-256.png'),
+    show: !app.getLoginItemSettings().wasOpenedAsHidden // OS起動時は非表示で開始
   });
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -22,14 +25,100 @@ function createWindow() {
   if (process.argv.includes('--dev')) {
     mainWindow.webContents.openDevTools();
   }
+
+  // ウィンドウを閉じる時の処理（トレイに最小化）
+  mainWindow.on('close', (event) => {
+    if (!isQuiting) {
+      event.preventDefault();
+      mainWindow.hide();
+      return false;
+    }
+  });
+
+  // ウィンドウが最小化された時もトレイに隠す
+  mainWindow.on('minimize', () => {
+    mainWindow.hide();
+  });
 }
 
-app.whenReady().then(createWindow);
+// システムトレイを作成する関数
+function createTray() {
+  const iconPath = path.join(__dirname, '../../assets/sigma-bf-icon-32.png');
+  const trayIcon = nativeImage.createFromPath(iconPath);
+  
+  tray = new Tray(trayIcon);
+  
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Sigma BF Copy を表示',
+      click: () => {
+        mainWindow.show();
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore();
+        }
+        mainWindow.focus();
+      }
+    },
+    {
+      label: 'カメラを再検知',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.send('refresh-camera');
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '起動時に自動開始',
+      type: 'checkbox',
+      checked: app.getLoginItemSettings().openAtLogin,
+      click: (menuItem) => {
+        app.setLoginItemSettings({
+          openAtLogin: menuItem.checked,
+          openAsHidden: true // 起動時は非表示で開始
+        });
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '終了',
+      click: () => {
+        isQuiting = true;
+        app.quit();
+      }
+    }
+  ]);
+  
+  tray.setContextMenu(contextMenu);
+  tray.setToolTip('Sigma BF Copy - カメラファイル自動コピー');
+  
+  // ダブルクリックでウィンドウを表示
+  tray.on('double-click', () => {
+    mainWindow.show();
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+  });
+}
+
+app.whenReady().then(() => {
+  createWindow();
+  createTray();
+  
+  // 初回起動時に自動起動を有効にするかユーザーに確認
+  if (!app.getLoginItemSettings().openAtLogin && !process.argv.includes('--dev')) {
+    setTimeout(() => {
+      if (mainWindow) {
+        mainWindow.webContents.send('ask-auto-start');
+      }
+    }, 2000);
+  }
+});
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // トレイアプリとして動作するため、ウィンドウが全て閉じられても終了しない
+  // macOSでもWindowsと同様の動作にする
 });
 
 app.on('activate', () => {
@@ -182,4 +271,13 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
       message: error.message
     };
   }
+});
+
+// 自動起動設定
+ipcMain.handle('set-auto-start', (event, enabled) => {
+  app.setLoginItemSettings({
+    openAtLogin: enabled,
+    openAsHidden: enabled // 自動起動時は非表示で開始
+  });
+  return true;
 });

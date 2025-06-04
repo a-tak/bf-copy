@@ -19,5 +19,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName),
   
   // 進行状況イベント
-  onCopyProgress: (callback) => ipcRenderer.on('copy-progress', callback)
+  onCopyProgress: (callback) => ipcRenderer.on('copy-progress', callback),
+  
+  // トレイ・自動起動関連
+  onAskAutoStart: (callback) => ipcRenderer.on('ask-auto-start', callback),
+  onRefreshCamera: (callback) => ipcRenderer.on('refresh-camera', callback),
+  setAutoStart: (enabled) => ipcRenderer.invoke('set-auto-start', enabled)
 });

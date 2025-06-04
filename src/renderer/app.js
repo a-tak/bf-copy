@@ -10,6 +10,7 @@ class SigmaBFCopy {
         await this.loadConfig();
         this.setupEventListeners();
         this.setupCopyProgressListener();
+        this.setupTrayListeners();
         
         if (!this.config || this.config.isFirstRun !== false) {
             this.showInitialSetup();
@@ -23,6 +24,18 @@ class SigmaBFCopy {
     setupCopyProgressListener() {
         window.electronAPI.onCopyProgress((event, progressData) => {
             this.updateProgress(progressData);
+        });
+    }
+
+    setupTrayListeners() {
+        // 自動起動確認ダイアログ
+        window.electronAPI.onAskAutoStart(() => {
+            this.showAutoStartDialog();
+        });
+
+        // トレイからのカメラ再検知
+        window.electronAPI.onRefreshCamera(() => {
+            this.startCameraDetection();
         });
     }
 
@@ -307,6 +320,19 @@ class SigmaBFCopy {
             this.updateCurrentSettings();
             this.hideSettingsModal();
             alert('設定を保存しました');
+        }
+    }
+
+    showAutoStartDialog() {
+        const result = confirm(
+            'Sigma BF Copy を Windows 起動時に自動で開始しますか？\n\n' +
+            'カメラが接続されたときに素早くファイルをコピーできるようになります。\n' +
+            '自動起動を有効にする場合は「OK」を、無効にする場合は「キャンセル」を選択してください。'
+        );
+        
+        if (result) {
+            window.electronAPI.setAutoStart(true);
+            alert('自動起動が有効になりました。次回からWindows起動時にアプリが自動で開始されます。');
         }
     }
 }
