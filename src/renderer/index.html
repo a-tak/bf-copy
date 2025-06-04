@@ -10,8 +10,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔷 Sigma BF Copy</h1>
-            <p>Sigma BFカメラからファイルをコピーします</p>
+            <h1>SIGMA BF COPY</h1>
+            <p>sigma bf camera file transfer utility</p>
         </header>
 
         <!-- 初回設定ダイアログ -->
@@ -21,23 +21,23 @@
                 <p>写真と動画のコピー先フォルダを設定してください</p>
                 
                 <div class="setting-group">
-                    <label>写真コピー先:</label>
+                    <label>photo destination:</label>
                     <div class="folder-input">
                         <input type="text" id="photo-destination" readonly>
-                        <button id="select-photo-btn">📁 選択</button>
+                        <button id="select-photo-btn">SELECT</button>
                     </div>
                 </div>
                 
                 <div class="setting-group">
-                    <label>動画コピー先:</label>
+                    <label>video destination:</label>
                     <div class="folder-input">
                         <input type="text" id="video-destination" readonly>
-                        <button id="select-video-btn">📁 選択</button>
+                        <button id="select-video-btn">SELECT</button>
                     </div>
                 </div>
                 
                 <div class="modal-actions">
-                    <button id="save-initial-config" class="primary">設定を保存</button>
+                    <button id="save-initial-config" class="primary">SAVE</button>
                 </div>
             </div>
         </div>
@@ -47,20 +47,20 @@
             <!-- カメラ検知状態 -->
             <section class="camera-status">
                 <div id="camera-not-detected" class="status-card">
-                    <h3>📷 カメラを接続してください</h3>
-                    <p>Sigma BFカメラをUSBで接続してください</p>
-                    <button id="refresh-camera">🔄 再検索</button>
+                    <h3>camera: not connected</h3>
+                    <p>connect sigma bf camera via usb</p>
+                    <button id="refresh-camera">SCAN</button>
                 </div>
                 
                 <div id="camera-detected" class="status-card hidden">
-                    <h3>✅ Sigma BF カメラが見つかりました</h3>
+                    <h3>camera: sigma bf detected</h3>
                     <p id="camera-info"></p>
                 </div>
             </section>
 
             <!-- フォルダ選択 -->
             <section id="folder-selection" class="hidden">
-                <h3>📁 コピーするフォルダを選択</h3>
+                <h3>select folders to copy</h3>
                 <div id="camera-folders" class="folder-list">
                     <!-- 動的に生成されるフォルダリスト -->
                 </div>
@@ -68,30 +68,30 @@
 
             <!-- コピー設定 -->
             <section id="copy-settings" class="hidden">
-                <h3>⚙️ コピー設定</h3>
+                <h3>copy settings</h3>
                 
                 <div class="setting-group">
-                    <label>フォルダ名:</label>
-                    <input type="text" id="folder-name" placeholder="例: 撮影セッション">
+                    <label>folder name:</label>
+                    <input type="text" id="folder-name" placeholder="session_name">
                 </div>
                 
                 <div class="setting-group">
-                    <label>現在の設定:</label>
+                    <label>current config:</label>
                     <div class="current-settings">
-                        <div>📸 写真: <span id="current-photo-dest"></span></div>
-                        <div>🎥 動画: <span id="current-video-dest"></span></div>
+                        <div>photo: <span id="current-photo-dest"></span></div>
+                        <div>video: <span id="current-video-dest"></span></div>
                     </div>
-                    <button id="change-settings">設定変更</button>
+                    <button id="change-settings">CHANGE</button>
                 </div>
                 
                 <div class="copy-actions">
-                    <button id="start-copy" class="primary">📋 コピー開始</button>
+                    <button id="start-copy" class="primary">START COPY</button>
                 </div>
             </section>
 
             <!-- 進行状況 -->
             <section id="progress-section" class="hidden">
-                <h3>📊 コピー進行状況</h3>
+                <h3>copy progress</h3>
                 <div class="progress-bar">
                     <div id="progress-fill"></div>
                 </div>
@@ -103,27 +103,27 @@
         <!-- 設定画面 -->
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content">
-                <h2>設定変更</h2>
+                <h2>change settings</h2>
                 
                 <div class="setting-group">
-                    <label>写真コピー先:</label>
+                    <label>photo destination:</label>
                     <div class="folder-input">
                         <input type="text" id="settings-photo-dest" readonly>
-                        <button id="settings-select-photo">📁 選択</button>
+                        <button id="settings-select-photo">SELECT</button>
                     </div>
                 </div>
                 
                 <div class="setting-group">
-                    <label>動画コピー先:</label>
+                    <label>video destination:</label>
                     <div class="folder-input">
                         <input type="text" id="settings-video-dest" readonly>
-                        <button id="settings-select-video">📁 選択</button>
+                        <button id="settings-select-video">SELECT</button>
                     </div>
                 </div>
                 
                 <div class="modal-actions">
-                    <button id="cancel-settings">キャンセル</button>
-                    <button id="save-settings" class="primary">保存</button>
+                    <button id="cancel-settings">CANCEL</button>
+                    <button id="save-settings" class="primary">SAVE</button>
                 </div>
             </div>
         </div>

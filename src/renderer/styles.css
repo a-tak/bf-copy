@@ -6,10 +6,10 @@
 }
 
 body {
-    font-family: "Noto Sans CJK JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: monospace, "Monaco", "Menlo", "Ubuntu Mono", "Courier New";
+    background: #000;
     min-height: 100vh;
-    color: #333;
+    color: #00ff00;
     -webkit-font-feature-settings: "palt";
     font-feature-settings: "palt";
 }
@@ -22,184 +22,211 @@ body {
 
 /* ヘッダー */
 header {
-    text-align: center;
-    color: white;
+    text-align: left;
+    color: #00ff00;
     margin-bottom: 30px;
+    border-bottom: 1px solid #00ff00;
+    padding-bottom: 10px;
 }
 
 header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    text-shadow: none;
+    font-weight: normal;
 }
 
 header p {
-    font-size: 1.1rem;
-    opacity: 0.9;
+    font-size: 0.9rem;
+    opacity: 0.7;
 }
 
 /* カード */
 .status-card {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
+    background: #000;
+    border: 1px solid #00ff00;
+    border-radius: 0;
+    padding: 15px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    text-align: center;
+    box-shadow: none;
+    text-align: left;
 }
 
 .status-card h3 {
-    font-size: 1.3rem;
+    font-size: 1rem;
     margin-bottom: 10px;
-    color: #4a5568;
+    color: #00ff00;
+    font-weight: normal;
 }
 
 /* セクション */
 section {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
+    background: #000;
+    border: 1px solid #00ff00;
+    border-radius: 0;
+    padding: 15px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: none;
 }
 
 section h3 {
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-    color: #2d3748;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 10px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #00ff00;
+    border-bottom: 1px solid #00ff00;
+    padding-bottom: 5px;
+    font-weight: normal;
 }
 
 /* 設定グループ */
 .setting-group {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .setting-group label {
     display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #4a5568;
+    font-weight: normal;
+    margin-bottom: 5px;
+    color: #00ff00;
 }
 
 .folder-input {
     display: flex;
-    gap: 10px;
+    gap: 5px;
 }
 
 .folder-input input {
     flex: 1;
-    padding: 10px;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 5px;
+    border: 1px solid #00ff00;
+    border-radius: 0;
+    font-size: 12px;
+    background: #000;
+    color: #00ff00;
+    font-family: monospace;
 }
 
 /* ボタン */
 button {
-    background: #4299e1;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    background: #000;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    padding: 5px 10px;
+    border-radius: 0;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.2s;
+    font-size: 12px;
+    font-weight: normal;
+    font-family: monospace;
+    transition: none;
 }
 
 button:hover {
-    background: #3182ce;
+    background: #00ff00;
+    color: #000;
 }
 
 button.primary {
-    background: #38a169;
-    font-size: 16px;
-    padding: 12px 24px;
+    background: #000;
+    color: #00ff00;
+    border: 2px solid #00ff00;
+    font-size: 12px;
+    padding: 8px 16px;
 }
 
 button.primary:hover {
-    background: #2f855a;
+    background: #00ff00;
+    color: #000;
 }
 
 /* フォルダリスト */
 .folder-list {
     display: grid;
-    gap: 10px;
+    gap: 5px;
 }
 
 .folder-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #00ff00;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: none;
+    background: #000;
 }
 
 .folder-item:hover {
-    background: #f7fafc;
-    border-color: #4299e1;
+    background: #00ff00;
+    color: #000;
 }
 
 .folder-item.selected {
-    background: #ebf8ff;
-    border-color: #4299e1;
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    background: #00ff00;
+    color: #000;
+    border-color: #00ff00;
+    box-shadow: none;
 }
 
 .folder-info h4 {
-    font-size: 16px;
-    margin-bottom: 5px;
+    font-size: 12px;
+    margin-bottom: 3px;
+    font-weight: normal;
 }
 
 .folder-info p {
-    font-size: 14px;
-    color: #718096;
+    font-size: 10px;
+    color: inherit;
+    opacity: 0.7;
 }
 
 /* 進行状況バー */
 .progress-bar {
     width: 100%;
-    height: 20px;
-    background: #e2e8f0;
-    border-radius: 10px;
+    height: 10px;
+    background: #000;
+    border: 1px solid #00ff00;
+    border-radius: 0;
     overflow: hidden;
     margin-bottom: 10px;
 }
 
 #progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4299e1, #38a169);
+    background: #00ff00;
     width: 0%;
     transition: width 0.3s ease;
 }
 
 #progress-text {
-    text-align: center;
-    font-weight: 600;
+    text-align: left;
+    font-weight: normal;
     margin-bottom: 10px;
+    color: #00ff00;
+    font-family: monospace;
 }
 
 #progress-details {
-    font-size: 14px;
-    color: #718096;
+    font-size: 12px;
+    color: #00ff00;
+    opacity: 0.7;
+    font-family: monospace;
 }
 
 /* 現在の設定表示 */
 .current-settings {
-    background: #f7fafc;
-    padding: 15px;
-    border-radius: 6px;
+    background: #000;
+    border: 1px solid #00ff00;
+    padding: 10px;
+    border-radius: 0;
     margin-bottom: 10px;
 }
 
 .current-settings div {
-    margin-bottom: 5px;
-    font-size: 14px;
+    margin-bottom: 3px;
+    font-size: 12px;
+    color: #00ff00;
+    font-family: monospace;
 }
 
 /* モーダル */
@@ -209,7 +236,7 @@ button.primary:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.8);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -217,32 +244,36 @@ button.primary:hover {
 }
 
 .modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    min-width: 500px;
+    background: #000;
+    border: 2px solid #00ff00;
+    padding: 20px;
+    border-radius: 0;
+    min-width: 400px;
     max-width: 90vw;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    box-shadow: none;
 }
 
 .modal-content h2 {
-    margin-bottom: 20px;
-    color: #2d3748;
+    margin-bottom: 15px;
+    color: #00ff00;
+    font-size: 1.2rem;
+    font-weight: normal;
+    font-family: monospace;
 }
 
 .modal-actions {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     justify-content: flex-end;
-    margin-top: 25px;
+    margin-top: 15px;
 }
 
 /* アクション */
 .copy-actions {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     justify-content: center;
-    margin-top: 25px;
+    margin-top: 15px;
 }
 
 /* ユーティリティ */
