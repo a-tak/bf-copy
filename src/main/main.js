@@ -174,9 +174,19 @@ const { copyFiles } = require('../utils/file-manager');
 // ファイルコピー（進行状況通知付き）
 ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName) => {
   try {
-    const result = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName);
+    // コピー先フォルダパスを生成
+    const { generateDestinationPath, classifyFileType } = require('../utils/file-manager');
+    const photoDestPath = generateDestinationPath(photoDestination, folderName);
+    const videoDestPath = generateDestinationPath(videoDestination, folderName);
+
+    // コピー先フォルダを作成
+    await fs.ensureDir(photoDestPath);
+    await fs.ensureDir(videoDestPath);
+
+    // ソースフォルダからファイル一覧を取得
+    const sourceFiles = await fs.readdir(sourceFolderPath);
     
-    // 実際にコピーするファイル数を事前に計算
+    // ファイル数を事前に計算
     let totalFilesToCopy = 0;
     for (const fileName of sourceFiles) {
       const sourceFilePath = path.join(sourceFolderPath, fileName);
@@ -191,6 +201,7 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
     }
     
     const copyResults = {
+      success: true,
       totalFiles: totalFilesToCopy,
       copiedPhotos: 0,
       copiedVideos: 0,
@@ -203,35 +214,28 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
 
     for (const fileName of sourceFiles) {
       const sourceFilePath = path.join(sourceFolderPath, fileName);
-      const stats = await fs.stat(sourceFilePath);
-      
-      if (!stats.isFile()) continue;
-      
-      // ファイル拡張子で写真/動画を判定
-      const ext = path.extname(fileName).toLowerCase();
-      let destPath;
-      let isPhoto = false;
-      
-      if (['.jpg', '.jpeg', '.dng', '.raw', '.tiff', '.tif', '.heif', '.heic'].includes(ext)) {
-        destPath = path.join(photoDestPath, fileName);
-        isPhoto = true;
-      } else if (['.mov', '.mp4', '.avi', '.mkv', '.m4v'].includes(ext)) {
-        destPath = path.join(videoDestPath, fileName);
-        isPhoto = false;
-      } else {
-        // 不明な拡張子は写真として扱う
-        destPath = path.join(photoDestPath, fileName);
-        isPhoto = true;
-      }
-
       try {
+        const stats = await fs.stat(sourceFilePath);
+        
+        if (!stats.isFile()) continue;
+        
+        // ファイル拡張子で写真/動画を判定
+        const fileType = classifyFileType(fileName);
+        let destPath;
+        
+        if (fileType === 'photo') {
+          destPath = path.join(photoDestPath, fileName);
+        } else {
+          destPath = path.join(videoDestPath, fileName);
+        }
+
         // ファイルコピー
         await fs.copy(sourceFilePath, destPath, { 
-          overwrite: false, // 既存ファイルは上書きしない
+          overwrite: false,
           errorOnExist: false 
         });
         
-        if (isPhoto) {
+        if (fileType === 'photo') {
           copyResults.copiedPhotos++;
         } else {
           copyResults.copiedVideos++;
@@ -247,7 +251,7 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
           percentage: Math.round((copiedCount / totalFilesToCopy) * 100)
         });
         
-        console.log(`コピー完了: ${fileName} -> ${isPhoto ? '写真' : '動画'}`);
+        console.log(`コピー完了: ${fileName} -> ${fileType} (${copiedCount}/${totalFilesToCopy})`);
         
       } catch (error) {
         console.error(`ファイルコピーエラー: ${fileName}`, error);
@@ -259,11 +263,7 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
     }
 
     console.log('コピー結果:', copyResults);
-
-    // 進行状況通知機能は後で追加可能
-    // 現在はシンプルな実装でテストを通す
-    
-    return result;
+    return copyResults;
   } catch (error) {
     console.error('ファイルコピーエラー:', error);
     return {
