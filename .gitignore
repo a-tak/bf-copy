@@ -57,3 +57,4 @@ jspm_packages/
 # Electron
 out/
 app-builds/
+.claude/settings.local.json
