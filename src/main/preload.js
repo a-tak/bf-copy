@@ -24,5 +24,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // トレイ・自動起動関連
   onAskAutoStart: (callback) => ipcRenderer.on('ask-auto-start', callback),
   onRefreshCamera: (callback) => ipcRenderer.on('refresh-camera', callback),
-  setAutoStart: (enabled) => ipcRenderer.invoke('set-auto-start', enabled)
+  setAutoStart: (enabled) => ipcRenderer.invoke('set-auto-start', enabled),
+  
+  // カメラ接続イベント
+  onCameraConnected: (callback) => ipcRenderer.on('camera-connected', callback)
 });

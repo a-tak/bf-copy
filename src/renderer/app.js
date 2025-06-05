@@ -37,6 +37,12 @@ class SigmaBFCopy {
         window.electronAPI.onRefreshCamera(() => {
             this.startCameraDetection();
         });
+        
+        // カメラ接続イベント
+        window.electronAPI.onCameraConnected((event, cameraInfo) => {
+            console.log('カメラ接続イベントを受信:', cameraInfo);
+            this.handleCameraConnected(cameraInfo);
+        });
     }
 
     updateProgress(progressData) {
@@ -321,6 +327,17 @@ class SigmaBFCopy {
             this.hideSettingsModal();
             alert('設定を保存しました');
         }
+    }
+
+    handleCameraConnected(cameraInfo) {
+        // カメラ情報を更新
+        this.cameraInfo = cameraInfo;
+        
+        // カメラ検知状態を表示
+        this.showCameraDetected(`${cameraInfo.drive}:\\ - ${cameraInfo.label}`);
+        
+        // 通知メッセージを表示（オプション）
+        console.log('Sigma BFカメラが接続されました。ウィンドウをアクティブ化しています。');
     }
 
     showAutoStartDialog() {

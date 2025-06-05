@@ -41,6 +41,66 @@ function createWindow() {
   });
 }
 
+// カメラ監視機能
+let cameraMonitoringInterval = null;
+let lastDetectedCamera = null;
+
+function startCameraMonitoring() {
+  // 5秒ごとにカメラをチェック
+  cameraMonitoringInterval = setInterval(async () => {
+    try {
+      const currentCamera = await detectSigmaCamera();
+      
+      // カメラが新しく検知された場合
+      if (currentCamera && !lastDetectedCamera) {
+        console.log('BFカメラが新しく接続されました:', currentCamera);
+        
+        // ウィンドウをアクティブ化
+        activateMainWindow();
+        
+        // レンダラープロセスにカメラ検知を通知
+        if (mainWindow) {
+          mainWindow.webContents.send('camera-connected', currentCamera);
+        }
+      }
+      
+      // カメラ状態を更新
+      lastDetectedCamera = currentCamera;
+      
+    } catch (error) {
+      console.error('カメラ監視エラー:', error);
+    }
+  }, 5000); // 5秒間隔
+}
+
+function stopCameraMonitoring() {
+  if (cameraMonitoringInterval) {
+    clearInterval(cameraMonitoringInterval);
+    cameraMonitoringInterval = null;
+  }
+}
+
+function activateMainWindow() {
+  if (mainWindow) {
+    // ウィンドウが最小化されている場合は復元
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    
+    // ウィンドウを表示
+    mainWindow.show();
+    
+    // ウィンドウをフォーカス
+    mainWindow.focus();
+    
+    // トップレベルに表示
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.setAlwaysOnTop(false);
+    
+    console.log('メインウィンドウをアクティブ化しました');
+  }
+}
+
 // システムトレイを作成する関数
 function createTray() {
   const iconPath = path.join(__dirname, '../../assets/sigma-bf-icon-32.png');
@@ -106,6 +166,9 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   
+  // カメラ監視を開始
+  startCameraMonitoring();
+  
   // 初回起動時に自動起動を有効にするかユーザーに確認
   if (!app.getLoginItemSettings().openAtLogin && !process.argv.includes('--dev')) {
     setTimeout(() => {
@@ -119,6 +182,11 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   // トレイアプリとして動作するため、ウィンドウが全て閉じられても終了しない
   // macOSでもWindowsと同様の動作にする
+});
+
+app.on('before-quit', () => {
+  // アプリ終了時にカメラ監視を停止
+  stopCameraMonitoring();
 });
 
 app.on('activate', () => {
