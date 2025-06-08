@@ -109,3 +109,43 @@ npm start
 - **完全インストーラー**: Windows環境で `npm run build-win` を実行
 - **出力先**: `dist/win-unpacked/Sigma BF Copy.exe`
 
+## Windows版インストーラー作成
+
+### インストーラー作成コマンド
+Windows PowerShell環境で実行：
+
+```powershell
+# Windows版インストーラーを作成
+npm run build-win
+
+# または直接electron-builderを実行
+npx electron-builder --win
+```
+
+### 出力ファイル
+```
+dist/
+├── win-unpacked/                    # ポータブル版
+│   └── Sigma BF Copy.exe
+├── Sigma BF Copy Setup 1.0.0.exe   # インストーラー
+└── latest.yml                      # 自動更新用メタデータ
+```
+
+### インストーラーの特徴
+- **形式**: NSIS (.exe形式)
+- **コード署名**: なし（個人使用・小規模配布向け）
+- **ワンクリックインストール**: 無効（ユーザーが設定可能）
+- **インストールディレクトリ変更**: 可能
+- **スタートメニューショートカット**: 作成
+- **インストール完了後の自動実行**: 無効
+
+### ユーザー向けインストール手順
+1. `Sigma BF Copy Setup 1.0.0.exe` をダブルクリック
+2. **「WindowsによってPCが保護されました」が表示された場合**：
+   - 「詳細情報」をクリック
+   - 「実行」ボタンをクリック
+3. インストーラーの指示に従ってインストール
+4. スタートメニューから「Sigma BF Copy」を起動
+
+**注意**: コード署名なしのため初回実行時にWindows Defender SmartScreenが警告を表示しますが、アプリケーションの機能には影響ありません。
+

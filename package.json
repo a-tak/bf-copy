@@ -47,7 +47,8 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/sigma-bf-icon-256.png"
+      "icon": "assets/sigma-bf-icon-256.png",
+      "sign": null
     },
     "mac": {
       "target": "dmg",
