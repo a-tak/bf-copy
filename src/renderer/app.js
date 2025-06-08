@@ -82,43 +82,6 @@ class SigmaBFCopy {
         document.getElementById('change-settings').addEventListener('click', () => this.showSettingsModal());
         document.getElementById('start-copy').addEventListener('click', () => this.startCopy());
         
-        // デバッグ：フォルダ名フィールドのイベント監視
-        const folderNameInput = document.getElementById('folder-name');
-        if (folderNameInput) {
-            folderNameInput.addEventListener('focus', () => console.log('フォルダ名フィールド: focus'));
-            folderNameInput.addEventListener('blur', () => console.log('フォルダ名フィールド: blur'));
-            folderNameInput.addEventListener('input', (e) => {
-                console.log('フォルダ名フィールド: input', e.target.value);
-            });
-            folderNameInput.addEventListener('keydown', (e) => {
-                console.log('フォルダ名フィールド: keydown', e.key, 'preventDefault:', e.defaultPrevented);
-                console.log('フィールド値（keydown前）:', e.target.value);
-            });
-            folderNameInput.addEventListener('keyup', (e) => {
-                console.log('フォルダ名フィールド: keyup', e.key);
-                console.log('フィールド値（keyup後）:', e.target.value);
-            });
-            folderNameInput.addEventListener('keypress', (e) => {
-                console.log('フォルダ名フィールド: keypress', e.key, 'preventDefault:', e.defaultPrevented);
-                console.log('Char code:', e.charCode, 'Key code:', e.keyCode);
-            });
-            folderNameInput.addEventListener('click', () => {
-                console.log('フォルダ名フィールド: click');
-                console.log('現在値:', folderNameInput.value);
-            });
-            
-            // プロパティを直接監視
-            const originalValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-            Object.defineProperty(folderNameInput, 'value', {
-                get: function() {
-                    return this.getAttribute('value') || '';
-                },
-                set: function(val) {
-                    console.log('フォルダ名フィールド: value設定', val);
-                    originalValueSetter.call(this, val);
-                }
-            });
-        }
 
         // 設定モーダル
         document.getElementById('settings-select-photo').addEventListener('click', () => this.selectFolder('settings-photo-dest'));
@@ -134,50 +97,6 @@ class SigmaBFCopy {
     //     console.log('フォルダ名復元機能は無効化されています');
     // }
 
-    forceResetFolderNameField() {
-        console.log('=== フィールド強制リセット開始 ===');
-        const folderNameInput = document.getElementById('folder-name');
-        
-        if (!folderNameInput) {
-            console.error('フォルダ名フィールドが見つかりません');
-            return;
-        }
-        
-        // 既存のフィールドを一旦削除して再作成
-        const parent = folderNameInput.parentNode;
-        const newInput = document.createElement('input');
-        
-        // 属性をコピー
-        newInput.type = 'text';
-        newInput.id = 'folder-name';
-        newInput.placeholder = '例: 撮影セッション';
-        newInput.style.cssText = folderNameInput.style.cssText;
-        
-        // 古いフィールドを削除して新しいものに置き換え
-        parent.replaceChild(newInput, folderNameInput);
-        
-        // イベントリスナーを再設定
-        newInput.addEventListener('focus', () => console.log('新フォルダ名フィールド: focus'));
-        newInput.addEventListener('blur', () => console.log('新フォルダ名フィールド: blur'));
-        newInput.addEventListener('input', (e) => console.log('新フォルダ名フィールド: input', e.target.value));
-        newInput.addEventListener('keydown', (e) => {
-            console.log('新フォルダ名フィールド: keydown', e.key);
-            console.log('新フィールド値（keydown前）:', e.target.value);
-        });
-        newInput.addEventListener('keyup', (e) => {
-            console.log('新フォルダ名フィールド: keyup', e.key);
-            console.log('新フィールド値（keyup後）:', e.target.value);
-        });
-        
-        console.log('フィールド強制リセット完了');
-        console.log('新フィールド:', newInput);
-        
-        // テスト用にフォーカス
-        setTimeout(() => {
-            newInput.focus();
-            console.log('新フィールドにフォーカス設定完了');
-        }, 100);
-    }
 
     async selectFolder(inputId) {
         const folderPath = await window.electronAPI.selectFolder();
@@ -395,10 +314,6 @@ class SigmaBFCopy {
         document.getElementById('settings-modal').classList.add('hidden');
         // this.restoreFolderName(); // 無効化：イベント干渉の可能性
         
-        // デバッグ機能を無効化してシンプルにテスト
-        // setTimeout(() => {
-        //     console.log('アラート削除によりフォーカス問題が解決されているかテスト中');
-        // }, 500);
     }
 
     async saveSettings() {
