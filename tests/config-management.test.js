@@ -63,8 +63,7 @@ describe('設定管理機能', () => {
       const config = {
         photoDestination: '/path/to/photos',
         videoDestination: '/path/to/videos',
-        isFirstRun: false,
-        lastFolderName: 'test-folder'
+        isFirstRun: false
       };
       
       const result = await saveConfig(config);

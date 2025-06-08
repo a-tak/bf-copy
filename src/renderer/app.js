@@ -111,8 +111,7 @@ class SigmaBFCopy {
         this.config = {
             photoDestination,
             videoDestination,
-            isFirstRun: false,
-            lastFolderName: ''
+            isFirstRun: false
         };
 
         if (await this.saveConfig()) {
@@ -259,9 +258,6 @@ class SigmaBFCopy {
             return;
         }
 
-        // フォルダ名を設定に保存
-        this.config.lastFolderName = folderName;
-        await this.saveConfig();
 
         // 進行状況セクションを表示
         document.getElementById('progress-section').classList.remove('hidden');
