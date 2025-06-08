@@ -11,7 +11,6 @@ class SigmaBFCopy {
         this.setupEventListeners();
         this.setupCopyProgressListener();
         this.setupTrayListeners();
-        // this.restoreFolderName(); // 無効化：イベント干渉の可能性
         
         if (!this.config || this.config.isFirstRun !== false) {
             this.showInitialSetup();
@@ -91,11 +90,6 @@ class SigmaBFCopy {
 
     }
 
-    // restoreFolderName() {
-    //     // フィールド名復元機能を無効化
-    //     // イベント干渉の可能性があるため一時的に無効化
-    //     console.log('フォルダ名復元機能は無効化されています');
-    // }
 
 
     async selectFolder(inputId) {
@@ -315,8 +309,6 @@ class SigmaBFCopy {
 
     hideSettingsModal() {
         document.getElementById('settings-modal').classList.add('hidden');
-        // this.restoreFolderName(); // 無効化：イベント干渉の可能性
-        
     }
 
     async saveSettings() {
