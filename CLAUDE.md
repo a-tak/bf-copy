@@ -63,37 +63,42 @@ Sigma BFカメラから写真・動画をWindows/macOSに自動コピーするEl
 人間による動作確認が必要な場合は、以下のコマンドを実行してWindows用アプリケーションをビルド・実行する：
 
 ```bash
-# 1. 既存のプロセス終了（Windows環境）
-taskkill /F /IM "Sigma BF Copy.exe" 2>/dev/null || echo "プロセスが見つかりません"
+# WSL環境対応の強化されたプロセス終了・ビルドスクリプト
+./build-and-run.sh
 
-# 2. Windows用ビルド実行
+# または手動実行の場合：
+
+# 1. WSL環境でのプロセス終了（PowerShell経由）
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*'} | Stop-Process -Force"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*electron*'} | Stop-Process -Force"
+
+# 2. 代替方法（Windowsコマンド直接指定）
+/mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe"
+/mnt/c/Windows/System32/taskkill.exe /F /IM "electron.exe"
+
+# 3. ビルドファイルクリーンアップ
+rm -rf dist
+
+# 4. Windows用ビルド実行
 npm run pack
 
-# 3. 実行ファイルの確認
+# 5. 実行確認
 ls -la dist/win-unpacked/"Sigma BF Copy.exe"
-
-# 4. 実行手順の表示
-echo "Windows用アプリケーションが正常にビルドされました。"
-echo ""
-echo "実行方法："
-echo "1. dist/win-unpacked/ フォルダをWindowsマシンにコピー"
-echo "2. 'Sigma BF Copy.exe' をダブルクリックで実行"
-echo ""
-echo "動作確認手順："
-echo "1. フォルダ名を入力（例：'テスト撮影'）"
-echo "2. 設定変更ボタンをクリック"
-echo "3. 設定画面を閉じる（キャンセルまたは保存）"
-echo "4. フォルダ名フィールドに入力した値が残っているか確認"
 ```
 
 ### プロセス管理コマンド
 
 ```bash
-# アプリケーション終了
-taskkill /F /IM "Sigma BF Copy.exe"
+# WSL環境での確実なプロセス終了
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*'} | Stop-Process -Force"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*electron*'} | Stop-Process -Force"
 
-# 実行中プロセス確認
-tasklist | grep -i "sigma"
+# 実行中プロセス確認（WSL環境）
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*' -or $_.ProcessName -like '*electron*'}"
+
+# 代替方法（Windowsコマンド直接）
+/mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe"
+/mnt/c/Windows/System32/tasklist.exe | grep -i "sigma"
 
 # 開発モードで実行
 npm start
