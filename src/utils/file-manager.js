@@ -248,6 +248,122 @@ function generateDestinationPath(destination, folderName) {
   return path.join(destination, destFolderName, 'BF');
 }
 
+// ファイル衝突チェック機能（TDD実装）
+async function checkFileConflicts(sourceFolderPath, photoDestination, videoDestination, folderName) {
+  const fs = require('fs-extra');
+  const path = require('path');
+  
+  try {
+    const conflicts = [];
+    
+    // コピー先パスを生成
+    const photoDestPath = generateDestinationPath(photoDestination, folderName);
+    const videoDestPath = generateDestinationPath(videoDestination, folderName);
+    
+    // ソースフォルダからファイル一覧を取得
+    const sourceFiles = await fs.readdir(sourceFolderPath);
+    
+    for (const fileName of sourceFiles) {
+      const sourceFilePath = path.join(sourceFolderPath, fileName);
+      const stats = await fs.stat(sourceFilePath);
+      
+      if (!stats.isFile()) continue;
+      
+      // ファイル拡張子で写真/動画を判定
+      const fileType = classifyFileType(fileName);
+      
+      let destFilePath;
+      if (fileType === 'photo') {
+        destFilePath = path.join(photoDestPath, fileName);
+      } else { // fileType === 'video'
+        destFilePath = path.join(videoDestPath, fileName);
+      }
+      
+      // ファイルが既に存在するかチェック
+      if (await fs.pathExists(destFilePath)) {
+        conflicts.push({
+          fileName,
+          fileType,
+          existingPath: destFilePath,
+          sourceSize: stats.size
+        });
+      }
+    }
+    
+    return conflicts;
+    
+  } catch (error) {
+    console.error('ファイル衝突チェックエラー:', error);
+    return [];
+  }
+}
+
+// フォルダ衝突チェック機能（TDD実装）
+async function checkFolderConflicts(photoDestination, videoDestination, folderName) {
+  const fs = require('fs-extra');
+  
+  try {
+    const conflicts = [];
+    
+    // コピー先パスを生成
+    const photoDestPath = generateDestinationPath(photoDestination, folderName);
+    const videoDestPath = generateDestinationPath(videoDestination, folderName);
+    
+    // 写真フォルダの存在チェック
+    if (await fs.pathExists(photoDestPath)) {
+      conflicts.push({
+        type: 'photo',
+        existingPath: photoDestPath
+      });
+    }
+    
+    // 動画フォルダの存在チェック
+    if (await fs.pathExists(videoDestPath)) {
+      conflicts.push({
+        type: 'video',
+        existingPath: videoDestPath
+      });
+    }
+    
+    return conflicts;
+    
+  } catch (error) {
+    console.error('フォルダ衝突チェックエラー:', error);
+    return [];
+  }
+}
+
+// 衝突チェック付きファイルコピー機能（TDD実装）
+async function copyFilesWithConflictCheck(sourceFolderPath, photoDestination, videoDestination, folderName, progressCallback) {
+  try {
+    // まずファイル衝突をチェック
+    const fileConflicts = await checkFileConflicts(sourceFolderPath, photoDestination, videoDestination, folderName);
+    const folderConflicts = await checkFolderConflicts(photoDestination, videoDestination, folderName);
+    
+    // 衝突がある場合はエラーを返す
+    if (fileConflicts.length > 0 || folderConflicts.length > 0) {
+      return {
+        success: false,
+        reason: 'conflicts',
+        conflicts: {
+          files: fileConflicts,
+          folders: folderConflicts
+        }
+      };
+    }
+    
+    // 衝突がない場合は通常のコピー処理を実行
+    return await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, progressCallback);
+    
+  } catch (error) {
+    console.error('衝突チェック付きコピーエラー:', error);
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+}
+
 module.exports = {
   getCameraFolders,
   parseFolderDate,
@@ -255,4 +371,7 @@ module.exports = {
   copyFiles,
   classifyFileType,
   generateDestinationPath,
+  checkFileConflicts,
+  checkFolderConflicts,
+  copyFilesWithConflictCheck,
 };

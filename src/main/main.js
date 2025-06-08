@@ -241,13 +241,13 @@ ipcMain.handle('get-camera-folders', async (event, cameraPath) => {
 // フォルダサイズとファイルサイズフォーマット関数はutilsモジュールに移動済み
 
 // TDD実装済みのファイルコピー機能を使用
-const { copyFiles } = require('../utils/file-manager');
+const { copyFiles, copyFilesWithConflictCheck } = require('../utils/file-manager');
 
-// ファイルコピー（進行状況通知付き）
+// ファイルコピー（進行状況通知付き、衝突チェック機能付き）
 ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName) => {
   try {
-    // file-manager.jsの正しい実装を使用してファイルコピー（進行状況コールバック付き）
-    const copyResults = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, (progress) => {
+    // 衝突チェック付きファイルコピー機能を使用
+    const copyResults = await copyFilesWithConflictCheck(sourceFolderPath, photoDestination, videoDestination, folderName, (progress) => {
       // 進行状況をレンダラープロセスに送信
       mainWindow.webContents.send('copy-progress', progress);
     });
@@ -256,6 +256,26 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
     return copyResults;
   } catch (error) {
     console.error('ファイルコピーエラー:', error);
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+});
+
+// 衝突を無視して強制コピーする機能（ユーザー確認後）
+ipcMain.handle('copy-files-force', async (event, sourceFolderPath, photoDestination, videoDestination, folderName) => {
+  try {
+    // 元のcopyFiles関数を使用して強制コピー
+    const copyResults = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, (progress) => {
+      // 進行状況をレンダラープロセスに送信
+      mainWindow.webContents.send('copy-progress', progress);
+    });
+
+    console.log('強制コピー結果:', copyResults);
+    return copyResults;
+  } catch (error) {
+    console.error('強制コピーエラー:', error);
     return {
       success: false,
       message: error.message

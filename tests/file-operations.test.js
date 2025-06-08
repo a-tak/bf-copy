@@ -259,4 +259,230 @@ describe('ファイル操作機能', () => {
       }
     });
   });
+
+  describe('ファイル上書き防止機能', () => {
+    test('既存ファイルが存在する場合を検知する', async () => {
+      // 期待される動作:
+      // 1. コピー先に同名ファイルが既に存在するかチェック
+      // 2. 存在する場合は衝突情報を返す
+      // 3. 存在しない場合は空の配列を返す
+      
+      const { checkFileConflicts } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-conflict-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // ソースフォルダにテストファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'test photo');
+        await fs.writeFile(path.join(sourceFolder, 'video1.mp4'), 'test video');
+        
+        // コピー先に既存ファイルを作成（衝突するファイル）
+        const today = new Date().toISOString().slice(0, 10);
+        const photoDestPath = path.join(photoDestination, `${today}_test-folder`, 'BF');
+        const videoDestPath = path.join(videoDestination, `${today}_test-folder`, 'BF');
+        
+        await fs.ensureDir(photoDestPath);
+        await fs.ensureDir(videoDestPath);
+        await fs.writeFile(path.join(photoDestPath, 'photo1.jpg'), 'existing photo');
+        await fs.writeFile(path.join(videoDestPath, 'video1.mp4'), 'existing video');
+        
+        const conflicts = await checkFileConflicts(sourceFolder, photoDestination, videoDestination, 'test-folder');
+        
+        // 期待される結果
+        expect(Array.isArray(conflicts)).toBe(true);
+        expect(conflicts.length).toBe(2);
+        
+        const photoConflict = conflicts.find(c => c.fileName === 'photo1.jpg');
+        const videoConflict = conflicts.find(c => c.fileName === 'video1.mp4');
+        
+        expect(photoConflict).toBeDefined();
+        expect(photoConflict.fileType).toBe('photo');
+        expect(photoConflict.existingPath).toBe(path.join(photoDestPath, 'photo1.jpg'));
+        
+        expect(videoConflict).toBeDefined();
+        expect(videoConflict.fileType).toBe('video');
+        expect(videoConflict.existingPath).toBe(path.join(videoDestPath, 'video1.mp4'));
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('既存ファイルが存在しない場合は空の配列を返す', async () => {
+      // 期待される動作:
+      // コピー先に衝突するファイルがない場合は空の配列を返す
+      
+      const { checkFileConflicts } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-no-conflict-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // ソースフォルダにテストファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'test photo');
+        await fs.writeFile(path.join(sourceFolder, 'video1.mp4'), 'test video');
+        
+        // コピー先フォルダは存在しない（新規作成）
+        
+        const conflicts = await checkFileConflicts(sourceFolder, photoDestination, videoDestination, 'new-folder');
+        
+        // 期待される結果
+        expect(Array.isArray(conflicts)).toBe(true);
+        expect(conflicts.length).toBe(0);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('既存フォルダが存在する場合を検知する', async () => {
+      // 期待される動作:
+      // 1. コピー先フォルダが既に存在するかチェック
+      // 2. 存在する場合はフォルダ衝突情報を返す
+      
+      const { checkFolderConflicts } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-folder-test-'));
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // 既存のコピー先フォルダを作成
+        const today = new Date().toISOString().slice(0, 10);
+        const photoDestPath = path.join(photoDestination, `${today}_existing-folder`, 'BF');
+        const videoDestPath = path.join(videoDestination, `${today}_existing-folder`, 'BF');
+        
+        await fs.ensureDir(photoDestPath);
+        await fs.ensureDir(videoDestPath);
+        
+        const conflicts = await checkFolderConflicts(photoDestination, videoDestination, 'existing-folder');
+        
+        // 期待される結果
+        expect(Array.isArray(conflicts)).toBe(true);
+        expect(conflicts.length).toBe(2);
+        
+        const photoFolderConflict = conflicts.find(c => c.type === 'photo');
+        const videoFolderConflict = conflicts.find(c => c.type === 'video');
+        
+        expect(photoFolderConflict).toBeDefined();
+        expect(photoFolderConflict.existingPath).toBe(photoDestPath);
+        
+        expect(videoFolderConflict).toBeDefined();
+        expect(videoFolderConflict.existingPath).toBe(videoDestPath);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('copyFilesWithConflictCheck は衝突がある場合エラーを返す', async () => {
+      // 期待される動作:
+      // 1. コピー実行前に衝突をチェック
+      // 2. 衝突がある場合はエラーとして衝突情報を返す
+      // 3. ファイルコピーは実行しない
+      
+      const { copyFilesWithConflictCheck } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-conflict-copy-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // ソースフォルダにテストファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'test photo');
+        
+        // コピー先に既存ファイルを作成（衝突するファイル）
+        const today = new Date().toISOString().slice(0, 10);
+        const photoDestPath = path.join(photoDestination, `${today}_conflict-folder`, 'BF');
+        
+        await fs.ensureDir(photoDestPath);
+        await fs.writeFile(path.join(photoDestPath, 'photo1.jpg'), 'existing photo');
+        
+        const result = await copyFilesWithConflictCheck(sourceFolder, photoDestination, videoDestination, 'conflict-folder');
+        
+        // 期待される結果
+        expect(result.success).toBe(false);
+        expect(result.reason).toBe('conflicts');
+        expect(result.conflicts).toBeDefined();
+        expect(Array.isArray(result.conflicts.files)).toBe(true);
+        expect(result.conflicts.files.length).toBe(1);
+        expect(result.conflicts.files[0].fileName).toBe('photo1.jpg');
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('copyFilesWithConflictCheck は衝突がない場合は通常のコピーを実行する', async () => {
+      // 期待される動作:
+      // 1. コピー実行前に衝突をチェック
+      // 2. 衝突がない場合は通常のコピー処理を実行
+      
+      const { copyFilesWithConflictCheck } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-no-conflict-copy-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // ソースフォルダにテストファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'test photo');
+        
+        // コピー先フォルダは存在しない（新規作成）
+        
+        const result = await copyFilesWithConflictCheck(sourceFolder, photoDestination, videoDestination, 'new-folder');
+        
+        // 期待される結果
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(1);
+        expect(result.copiedPhotos).toBe(1);
+        expect(result.copiedVideos).toBe(0);
+        
+        // ファイルが正常にコピーされていることを確認
+        const today = new Date().toISOString().slice(0, 10);
+        const photoDestPath = path.join(photoDestination, `${today}_new-folder`, 'BF');
+        const copiedFile = path.join(photoDestPath, 'photo1.jpg');
+        expect(await fs.pathExists(copiedFile)).toBe(true);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+  });
 });

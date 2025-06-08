@@ -265,6 +265,12 @@ class SigmaBFCopy {
         this.config.lastFolderName = folderName;
         await this.saveConfig();
 
+        await this.executeCopy(false);
+    }
+
+    async executeCopy(forceOverwrite = false) {
+        const folderName = document.getElementById('folder-name').value.trim();
+        
         // 進行状況セクションを表示
         document.getElementById('progress-section').classList.remove('hidden');
         
@@ -273,37 +279,98 @@ class SigmaBFCopy {
                 sourceFolderPath: this.selectedFolder.path,
                 folderName: folderName,
                 photoDestination: this.config.photoDestination,
-                videoDestination: this.config.videoDestination
-            });
-
-            console.log('呼び出しパラメータ:', {
-                sourceFolderPath: this.selectedFolder.path,
-                photoDestination: this.config.photoDestination,
                 videoDestination: this.config.videoDestination,
-                folderName: folderName
+                forceOverwrite: forceOverwrite
             });
 
-            const result = await window.electronAPI.copyFiles(
-                this.selectedFolder.path,
-                this.config.photoDestination,
-                this.config.videoDestination,
-                folderName
-            );
+            let result;
+            if (forceOverwrite) {
+                // 強制コピー（衝突無視）
+                result = await window.electronAPI.copyFilesForce(
+                    this.selectedFolder.path,
+                    this.config.photoDestination,
+                    this.config.videoDestination,
+                    folderName
+                );
+            } else {
+                // 通常コピー（衝突チェック付き）
+                result = await window.electronAPI.copyFiles(
+                    this.selectedFolder.path,
+                    this.config.photoDestination,
+                    this.config.videoDestination,
+                    folderName
+                );
+            }
 
             console.log('コピー結果:', result);
 
             if (result.success) {
-                // alert削除：フォーカス問題の原因
                 console.log(`コピーが完了しました！写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイル`);
                 console.log(`写真: ${result.photoDestPath}`);
                 console.log(`動画: ${result.videoDestPath}`);
+                this.showCopySuccess(result);
+            } else if (result.reason === 'conflicts') {
+                // 衝突が検出された場合は警告ダイアログを表示
+                this.showConflictWarning(result.conflicts);
             } else {
                 console.error(`コピーに失敗しました: ${result.message}`);
+                this.showCopyError(result.message);
             }
         } catch (error) {
             console.error('コピーエラー:', error);
             console.error(`コピー中にエラーが発生しました: ${error.message}`);
+            this.showCopyError(error.message);
         }
+    }
+
+    showConflictWarning(conflicts) {
+        // 進行状況セクションを非表示
+        document.getElementById('progress-section').classList.add('hidden');
+        
+        let message = '⚠️ 既存のファイル/フォルダとの衝突が検出されました\n\n';
+        
+        if (conflicts.folders && conflicts.folders.length > 0) {
+            message += '📁 既存フォルダ:\n';
+            conflicts.folders.forEach(folder => {
+                message += `• ${folder.type === 'photo' ? '写真' : '動画'}フォルダ: ${folder.existingPath}\n`;
+            });
+            message += '\n';
+        }
+        
+        if (conflicts.files && conflicts.files.length > 0) {
+            message += '📄 既存ファイル:\n';
+            conflicts.files.forEach(file => {
+                message += `• ${file.fileName} (${file.fileType === 'photo' ? '写真' : '動画'})\n`;
+            });
+            message += '\n';
+        }
+        
+        message += 'このまま続行すると既存のファイルが上書きされる可能性があります。\n\n';
+        message += '続行しますか？';
+        
+        if (confirm(message)) {
+            // ユーザーが続行を選択した場合は強制コピーを実行
+            this.executeCopy(true);
+        } else {
+            console.log('ユーザーによりコピーがキャンセルされました');
+        }
+    }
+
+    showCopySuccess(result) {
+        // 成功メッセージを表示（alertの代わりにコンソール出力）
+        const message = `✅ コピーが完了しました！\n\n` +
+                       `📸 写真: ${result.copiedPhotos}ファイル\n` +
+                       `🎥 動画: ${result.copiedVideos}ファイル\n\n` +
+                       `保存先:\n📸 ${result.photoDestPath}\n🎥 ${result.videoDestPath}`;
+        
+        console.log(message);
+        // オプション: ここでtoast通知やカスタムダイアログを表示することもできます
+    }
+
+    showCopyError(errorMessage) {
+        // エラーメッセージを表示
+        const message = `❌ コピーに失敗しました\n\n${errorMessage}`;
+        alert(message);
     }
 
 

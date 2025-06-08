@@ -18,6 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   copyFiles: (sourceFolder, photoDestination, videoDestination, folderName) => 
     ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName),
   
+  // 強制ファイルコピー（衝突無視）
+  copyFilesForce: (sourceFolder, photoDestination, videoDestination, folderName) => 
+    ipcRenderer.invoke('copy-files-force', sourceFolder, photoDestination, videoDestination, folderName),
+  
   // 進行状況イベント
   onCopyProgress: (callback) => ipcRenderer.on('copy-progress', callback),
   
