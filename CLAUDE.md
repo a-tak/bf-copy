@@ -56,3 +56,56 @@ Sigma BFカメラから写真・動画をWindows/macOSに自動コピーするEl
 ## 重要な注意点
 - USB デバイス検知機能が含まれているため、セキュリティに注意
 - ファイル操作（コピー）機能があるため、エラーハンドリングを重視
+
+## ビルドと実行手順
+
+### 自動ビルド・実行コマンド
+人間による動作確認が必要な場合は、以下のコマンドを実行してWindows用アプリケーションをビルド・実行する：
+
+```bash
+# WSL環境対応の強化されたプロセス終了・ビルドスクリプト
+./build-and-run.sh
+
+# または手動実行の場合：
+
+# 1. WSL環境でのプロセス終了（PowerShell経由）
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*'} | Stop-Process -Force"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*electron*'} | Stop-Process -Force"
+
+# 2. 代替方法（Windowsコマンド直接指定）
+/mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe"
+/mnt/c/Windows/System32/taskkill.exe /F /IM "electron.exe"
+
+# 3. ビルドファイルクリーンアップ
+rm -rf dist
+
+# 4. Windows用ビルド実行
+npm run pack
+
+# 5. 実行確認
+ls -la dist/win-unpacked/"Sigma BF Copy.exe"
+```
+
+### プロセス管理コマンド
+
+```bash
+# WSL環境での確実なプロセス終了
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*'} | Stop-Process -Force"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*electron*'} | Stop-Process -Force"
+
+# 実行中プロセス確認（WSL環境）
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*' -or $_.ProcessName -like '*electron*'}"
+
+# 代替方法（Windowsコマンド直接）
+/mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe"
+/mnt/c/Windows/System32/tasklist.exe | grep -i "sigma"
+
+# 開発モードで実行
+npm start
+```
+
+### ビルド設定
+- **Windows用ビルド**: `npm run pack` (WSL環境でも実行可能)
+- **完全インストーラー**: Windows環境で `npm run build-win` を実行
+- **出力先**: `dist/win-unpacked/Sigma BF Copy.exe`
+

@@ -11,6 +11,7 @@ class SigmaBFCopy {
         this.setupEventListeners();
         this.setupCopyProgressListener();
         this.setupTrayListeners();
+        // this.restoreFolderName(); // 無効化：イベント干渉の可能性
         
         if (!this.config || this.config.isFirstRun !== false) {
             this.showInitialSetup();
@@ -80,6 +81,7 @@ class SigmaBFCopy {
         document.getElementById('refresh-camera').addEventListener('click', () => this.startCameraDetection());
         document.getElementById('change-settings').addEventListener('click', () => this.showSettingsModal());
         document.getElementById('start-copy').addEventListener('click', () => this.startCopy());
+        
 
         // 設定モーダル
         document.getElementById('settings-select-photo').addEventListener('click', () => this.selectFolder('settings-photo-dest'));
@@ -87,12 +89,14 @@ class SigmaBFCopy {
         document.getElementById('cancel-settings').addEventListener('click', () => this.hideSettingsModal());
         document.getElementById('save-settings').addEventListener('click', () => this.saveSettings());
 
-        // フォルダ名の前回値復元
-        const folderNameInput = document.getElementById('folder-name');
-        if (this.config && this.config.lastFolderName) {
-            folderNameInput.value = this.config.lastFolderName;
-        }
     }
+
+    // restoreFolderName() {
+    //     // フィールド名復元機能を無効化
+    //     // イベント干渉の可能性があるため一時的に無効化
+    //     console.log('フォルダ名復元機能は無効化されています');
+    // }
+
 
     async selectFolder(inputId) {
         const folderPath = await window.electronAPI.selectFolder();
@@ -308,6 +312,8 @@ class SigmaBFCopy {
 
     hideSettingsModal() {
         document.getElementById('settings-modal').classList.add('hidden');
+        // this.restoreFolderName(); // 無効化：イベント干渉の可能性
+        
     }
 
     async saveSettings() {
@@ -325,7 +331,8 @@ class SigmaBFCopy {
         if (await this.saveConfig()) {
             this.updateCurrentSettings();
             this.hideSettingsModal();
-            alert('設定を保存しました');
+            // alert('設定を保存しました'); // アラート削除：フォーカス問題の原因
+            console.log('設定を保存しました');
         }
     }
 
