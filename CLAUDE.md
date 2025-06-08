@@ -56,3 +56,51 @@ Sigma BFカメラから写真・動画をWindows/macOSに自動コピーするEl
 ## 重要な注意点
 - USB デバイス検知機能が含まれているため、セキュリティに注意
 - ファイル操作（コピー）機能があるため、エラーハンドリングを重視
+
+## ビルドと実行手順
+
+### 自動ビルド・実行コマンド
+人間による動作確認が必要な場合は、以下のコマンドを実行してWindows用アプリケーションをビルド・実行する：
+
+```bash
+# 1. 既存のプロセス終了（Windows環境）
+taskkill /F /IM "Sigma BF Copy.exe" 2>/dev/null || echo "プロセスが見つかりません"
+
+# 2. Windows用ビルド実行
+npm run pack
+
+# 3. 実行ファイルの確認
+ls -la dist/win-unpacked/"Sigma BF Copy.exe"
+
+# 4. 実行手順の表示
+echo "Windows用アプリケーションが正常にビルドされました。"
+echo ""
+echo "実行方法："
+echo "1. dist/win-unpacked/ フォルダをWindowsマシンにコピー"
+echo "2. 'Sigma BF Copy.exe' をダブルクリックで実行"
+echo ""
+echo "動作確認手順："
+echo "1. フォルダ名を入力（例：'テスト撮影'）"
+echo "2. 設定変更ボタンをクリック"
+echo "3. 設定画面を閉じる（キャンセルまたは保存）"
+echo "4. フォルダ名フィールドに入力した値が残っているか確認"
+```
+
+### プロセス管理コマンド
+
+```bash
+# アプリケーション終了
+taskkill /F /IM "Sigma BF Copy.exe"
+
+# 実行中プロセス確認
+tasklist | grep -i "sigma"
+
+# 開発モードで実行
+npm start
+```
+
+### ビルド設定
+- **Windows用ビルド**: `npm run pack` (WSL環境でも実行可能)
+- **完全インストーラー**: Windows環境で `npm run build-win` を実行
+- **出力先**: `dist/win-unpacked/Sigma BF Copy.exe`
+

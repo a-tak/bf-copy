@@ -93,9 +93,9 @@ function activateMainWindow() {
     // ウィンドウをフォーカス
     mainWindow.focus();
     
-    // トップレベルに表示
-    mainWindow.setAlwaysOnTop(true);
-    mainWindow.setAlwaysOnTop(false);
+    // setAlwaysOnTopの使用を停止（フォーカス問題の原因）
+    // mainWindow.setAlwaysOnTop(true);
+    // mainWindow.setAlwaysOnTop(false);
     
     console.log('メインウィンドウをアクティブ化しました');
   }
