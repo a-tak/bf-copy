@@ -150,7 +150,7 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       
       if (fileType === 'photo') {
         hasPhotos = true;
-      } else {
+      } else if (fileType === 'video') {
         hasVideos = true;
       }
     }
@@ -169,7 +169,7 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       
       if (fileType === 'photo') {
         destPath = path.join(photoDestPath, fileName);
-      } else {
+      } else { // fileType === 'video'
         destPath = path.join(videoDestPath, fileName);
       }
 
@@ -182,7 +182,7 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
         
         if (fileType === 'photo') {
           copyResults.copiedPhotos++;
-        } else {
+        } else { // fileType === 'video'
           copyResults.copiedVideos++;
         }
         
