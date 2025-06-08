@@ -121,7 +121,6 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     // 上書禁止: 既存フォルダの存在チェック
     const overwriteCheck = await checkForExistingFolders(photoDestPath, videoDestPath, sourceFolderPath);
     if (overwriteCheck.hasConflict) {
-      console.log('上書禁止: 既存フォルダが検出されました', overwriteCheck.conflictPath);
       return {
         success: false,
         message: `フォルダが既に存在します: ${overwriteCheck.conflictPath}`,

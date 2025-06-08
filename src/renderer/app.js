@@ -291,12 +291,25 @@ class SigmaBFCopy {
                 console.log(`コピーが完了しました！写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイル`);
                 console.log(`写真: ${result.photoDestPath}`);
                 console.log(`動画: ${result.videoDestPath}`);
+                this.showNotification('success', 'コピー完了', `写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイルのコピーが完了しました`);
             } else {
                 console.error(`コピーに失敗しました: ${result.message}`);
+                
+                // 上書き防止エラーの場合は専用メッセージを表示
+                if (result.overwritePrevented) {
+                    this.showNotification(
+                        'error', 
+                        '上書き禁止', 
+                        `既存のフォルダが検出されました。\n${result.conflictPath}\n\nコピーを中止しました。`
+                    );
+                } else {
+                    this.showNotification('error', 'コピーエラー', `コピーに失敗しました: ${result.message}`);
+                }
             }
         } catch (error) {
             console.error('コピーエラー:', error);
             console.error(`コピー中にエラーが発生しました: ${error.message}`);
+            this.showNotification('error', 'コピーエラー', `コピー中にエラーが発生しました: ${error.message}`);
         }
     }
 
