@@ -145,5 +145,118 @@ describe('ファイル操作機能', () => {
       expect(result).toContain('BF');
       expect(result).toMatch(/\/\d{4}-\d{2}-\d{2}_test-folder\/BF$/);
     });
+
+    test('対象ファイルがない場合はフォルダを作成しない', async () => {
+      // 期待される動作:
+      // ソースフォルダに写真・動画がない場合、コピー先フォルダを作成しない
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // 空のソースフォルダを作成
+        await fs.ensureDir(sourceFolder);
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, 'empty-folder');
+        
+        // 期待される結果
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(0);
+        expect(result.copiedPhotos).toBe(0);
+        expect(result.copiedVideos).toBe(0);
+        
+        // フォルダが作成されていないことを確認
+        expect(await fs.pathExists(result.photoDestPath)).toBe(false);
+        expect(await fs.pathExists(result.videoDestPath)).toBe(false);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('写真のみ存在する場合は写真フォルダのみ作成する', async () => {
+      // 期待される動作:
+      // ソースフォルダに写真のみある場合、写真フォルダのみ作成し動画フォルダは作成しない
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // ソースフォルダに写真ファイルのみを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'test.jpg'), 'test photo content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, 'photo-only');
+        
+        // 期待される結果
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(1);
+        expect(result.copiedPhotos).toBe(1);
+        expect(result.copiedVideos).toBe(0);
+        
+        // 写真フォルダのみ作成され、動画フォルダは作成されていないことを確認
+        expect(await fs.pathExists(result.photoDestPath)).toBe(true);
+        expect(await fs.pathExists(result.videoDestPath)).toBe(false);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('動画のみ存在する場合は動画フォルダのみ作成する', async () => {
+      // 期待される動作:
+      // ソースフォルダに動画のみある場合、動画フォルダのみ作成し写真フォルダは作成しない
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      
+      try {
+        // ソースフォルダに動画ファイルのみを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'test.mp4'), 'test video content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, 'video-only');
+        
+        // 期待される結果
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(1);
+        expect(result.copiedPhotos).toBe(0);
+        expect(result.copiedVideos).toBe(1);
+        
+        // 動画フォルダのみ作成され、写真フォルダは作成されていないことを確認
+        expect(await fs.pathExists(result.photoDestPath)).toBe(false);
+        expect(await fs.pathExists(result.videoDestPath)).toBe(true);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
   });
 });

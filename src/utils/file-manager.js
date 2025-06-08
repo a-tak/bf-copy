@@ -118,10 +118,6 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     const photoDestPath = generateDestinationPath(photoDestination, folderName);
     const videoDestPath = generateDestinationPath(videoDestination, folderName);
 
-    // コピー先フォルダを作成
-    await fs.ensureDir(photoDestPath);
-    await fs.ensureDir(videoDestPath);
-
     // ソースフォルダからファイル一覧を取得
     const sourceFiles = await fs.readdir(sourceFolderPath);
     
@@ -135,6 +131,11 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       videoDestPath
     };
 
+    // 先にファイルを分類して、必要なフォルダのみ作成する
+    const filesToCopy = [];
+    let hasPhotos = false;
+    let hasVideos = false;
+
     for (const fileName of sourceFiles) {
       const sourceFilePath = path.join(sourceFolderPath, fileName);
       const stats = await fs.stat(sourceFilePath);
@@ -145,6 +146,25 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       
       // ファイル拡張子で写真/動画を判定
       const fileType = classifyFileType(fileName);
+      filesToCopy.push({ fileName, sourceFilePath, fileType });
+      
+      if (fileType === 'photo') {
+        hasPhotos = true;
+      } else {
+        hasVideos = true;
+      }
+    }
+
+    // 対象ファイルがある場合のみ、コピー先フォルダを作成
+    if (hasPhotos) {
+      await fs.ensureDir(photoDestPath);
+    }
+    if (hasVideos) {
+      await fs.ensureDir(videoDestPath);
+    }
+
+    // ファイルをコピー
+    for (const { fileName, sourceFilePath, fileType } of filesToCopy) {
       let destPath;
       
       if (fileType === 'photo') {
