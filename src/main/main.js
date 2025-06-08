@@ -246,93 +246,11 @@ const { copyFiles } = require('../utils/file-manager');
 // ファイルコピー（進行状況通知付き）
 ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName) => {
   try {
-    // コピー先フォルダパスを生成
-    const { generateDestinationPath, classifyFileType } = require('../utils/file-manager');
-    const photoDestPath = generateDestinationPath(photoDestination, folderName);
-    const videoDestPath = generateDestinationPath(videoDestination, folderName);
-
-    // コピー先フォルダを作成
-    await fs.ensureDir(photoDestPath);
-    await fs.ensureDir(videoDestPath);
-
-    // ソースフォルダからファイル一覧を取得
-    const sourceFiles = await fs.readdir(sourceFolderPath);
-    
-    // ファイル数を事前に計算
-    let totalFilesToCopy = 0;
-    for (const fileName of sourceFiles) {
-      const sourceFilePath = path.join(sourceFolderPath, fileName);
-      try {
-        const stats = await fs.stat(sourceFilePath);
-        if (stats.isFile()) {
-          totalFilesToCopy++;
-        }
-      } catch (error) {
-        // ファイルアクセスエラーは無視
-      }
-    }
-    
-    const copyResults = {
-      success: true,
-      totalFiles: totalFilesToCopy,
-      copiedPhotos: 0,
-      copiedVideos: 0,
-      errors: [],
-      photoDestPath,
-      videoDestPath
-    };
-
-    let copiedCount = 0;
-
-    for (const fileName of sourceFiles) {
-      const sourceFilePath = path.join(sourceFolderPath, fileName);
-      try {
-        const stats = await fs.stat(sourceFilePath);
-        
-        if (!stats.isFile()) continue;
-        
-        // ファイル拡張子で写真/動画を判定
-        const fileType = classifyFileType(fileName);
-        let destPath;
-        
-        if (fileType === 'photo') {
-          destPath = path.join(photoDestPath, fileName);
-        } else {
-          destPath = path.join(videoDestPath, fileName);
-        }
-
-        // ファイルコピー
-        await fs.copy(sourceFilePath, destPath, { 
-          overwrite: false,
-          errorOnExist: false 
-        });
-        
-        if (fileType === 'photo') {
-          copyResults.copiedPhotos++;
-        } else {
-          copyResults.copiedVideos++;
-        }
-        
-        copiedCount++;
-        
-        // 進行状況を送信
-        mainWindow.webContents.send('copy-progress', {
-          current: copiedCount,
-          total: totalFilesToCopy,
-          fileName: fileName,
-          percentage: Math.round((copiedCount / totalFilesToCopy) * 100)
-        });
-        
-        console.log(`コピー完了: ${fileName} -> ${fileType} (${copiedCount}/${totalFilesToCopy})`);
-        
-      } catch (error) {
-        console.error(`ファイルコピーエラー: ${fileName}`, error);
-        copyResults.errors.push({
-          fileName,
-          error: error.message
-        });
-      }
-    }
+    // file-manager.jsの正しい実装を使用してファイルコピー（進行状況コールバック付き）
+    const copyResults = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, (progress) => {
+      // 進行状況をレンダラープロセスに送信
+      mainWindow.webContents.send('copy-progress', progress);
+    });
 
     console.log('コピー結果:', copyResults);
     return copyResults;

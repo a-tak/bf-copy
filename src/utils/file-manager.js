@@ -101,7 +101,7 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
 }
 
-async function copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName) {
+async function copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, progressCallback) {
   // テストで要求されたファイルコピー機能を実装
   const fs = require('fs-extra');
   const path = require('path');
@@ -164,6 +164,7 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     }
 
     // ファイルをコピー
+    let copiedCount = 0;
     for (const { fileName, sourceFilePath, fileType } of filesToCopy) {
       let destPath;
       
@@ -186,7 +187,19 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
           copyResults.copiedVideos++;
         }
         
-        console.log(`コピー完了: ${fileName} -> ${fileType}`);
+        copiedCount++;
+        
+        // 進行状況をコールバック
+        if (progressCallback) {
+          progressCallback({
+            current: copiedCount,
+            total: copyResults.totalFiles,
+            fileName: fileName,
+            percentage: Math.round((copiedCount / copyResults.totalFiles) * 100)
+          });
+        }
+        
+        console.log(`コピー完了: ${fileName} -> ${fileType} (${copiedCount}/${copyResults.totalFiles})`);
         
       } catch (error) {
         console.error(`ファイルコピーエラー: ${fileName}`, error);
