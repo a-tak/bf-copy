@@ -10,6 +10,7 @@
     "build-win": "electron-builder --win",
     "build-mac": "electron-builder --mac",
     "pack": "electron-builder --dir",
+    "create-icon": "node create-icon.js",
     "test": "jest",
     "test:watch": "jest --watch"
   },
@@ -45,10 +46,24 @@
       "assets/**/*",
       "package.json"
     ],
+    "extraMetadata": {
+      "main": "src/main/main.js"
+    },
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
       "icon": "assets/bf-copy-icon-256.png",
-      "sign": null
+      "sign": null,
+      "requestedExecutionLevel": "asInvoker",
+      "publisherName": "A-tak"
     },
     "mac": {
       "target": "dmg",
@@ -58,7 +73,9 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createStartMenuShortcut": true,
-      "runAfterFinish": false
+      "runAfterFinish": false,
+      "installerIcon": "assets/bf-copy-icon-256.png",
+      "uninstallerIcon": "assets/bf-copy-icon-256.png"
     }
   }
 }
