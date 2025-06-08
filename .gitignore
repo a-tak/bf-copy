@@ -58,3 +58,4 @@ jspm_packages/
 out/
 app-builds/
 .claude/settings.local.json
+.claude/settings.local.json
