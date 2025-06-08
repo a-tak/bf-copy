@@ -11,8 +11,6 @@ class SigmaBFCopy {
         this.setupEventListeners();
         this.setupCopyProgressListener();
         this.setupTrayListeners();
-        // フォルダ名復元（非同期で実行してイベント干渉を回避）
-        setTimeout(() => this.restoreFolderName(), 100);
         
         if (!this.config || this.config.isFirstRun !== false) {
             this.showInitialSetup();
@@ -92,23 +90,6 @@ class SigmaBFCopy {
 
     }
 
-    restoreFolderName() {
-        // フォルダ名復元機能（イベント干渉を回避した安全な実装）
-        try {
-            if (this.config && this.config.lastFolderName) {
-                const folderNameInput = document.getElementById('folder-name');
-                if (folderNameInput && !folderNameInput.value) {
-                    // 非同期で設定してフォーカスイベントとの競合を回避
-                    setTimeout(() => {
-                        folderNameInput.value = this.config.lastFolderName;
-                        console.log('フォルダ名を復元しました:', this.config.lastFolderName);
-                    }, 50);
-                }
-            }
-        } catch (error) {
-            console.error('フォルダ名復元エラー:', error);
-        }
-    }
 
 
     async selectFolder(inputId) {
@@ -332,9 +313,6 @@ class SigmaBFCopy {
 
     hideSettingsModal() {
         document.getElementById('settings-modal').classList.add('hidden');
-        // フォルダ名復元（フォーカス問題を回避するため遅延実行）
-        setTimeout(() => this.restoreFolderName(), 200);
-        
     }
 
     async saveSettings() {
