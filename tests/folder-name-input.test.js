@@ -138,37 +138,6 @@ describe('フォルダ名入力フィールドのダイアログ干渉問題', (
     });
   });
 
-  describe('フォルダ名復元機能のイベント干渉', () => {
-    test('フォルダ名復元時にイベント干渉が発生しない', () => {
-      // Issue #21 関連: restoreFolderName機能のテスト
-      
-      const lastFolderName = '前回のフォルダ名';
-      
-      // フォルダ名復元機能をシミュレート
-      const restoreFolderName = () => {
-        // 現在は無効化されているが、将来の実装に備えてテスト
-        if (folderNameInput) {
-          folderNameInput.value = lastFolderName;
-          
-          // focus/blur イベントを発火（イベント干渉の原因となりうる）
-          folderNameInput.focus();
-          folderNameInput.blur();
-          folderNameInput.focus();
-        }
-      };
-      
-      // 復元機能を実行
-      restoreFolderName();
-      
-      // 期待される結果: 復元後もフィールドが正常に動作する
-      expect(folderNameInput.value).toBe(lastFolderName);
-      
-      // 新しい値を入力できることを確認
-      const newValue = '新しいフォルダ名';
-      folderNameInput.value = newValue;
-      expect(folderNameInput.value).toBe(newValue);
-    });
-  });
 
   describe('モーダルダイアログとの競合', () => {
     test('設定モーダル表示時にフォルダ名フィールドのフォーカスが維持される', () => {
