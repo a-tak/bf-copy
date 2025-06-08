@@ -16,7 +16,7 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../../assets/sigma-bf-icon-256.png'),
+    icon: path.join(__dirname, '../../assets/bf-copy-icon-256.png'),
     show: !app.getLoginItemSettings().wasOpenedAsHidden // OS起動時は非表示で開始
   });
 
@@ -103,14 +103,14 @@ function activateMainWindow() {
 
 // システムトレイを作成する関数
 function createTray() {
-  const iconPath = path.join(__dirname, '../../assets/sigma-bf-icon-32.png');
+  const iconPath = path.join(__dirname, '../../assets/bf-copy-icon-32.png');
   const trayIcon = nativeImage.createFromPath(iconPath);
   
   tray = new Tray(trayIcon);
   
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Sigma BF Copy を表示',
+      label: 'BF Copy を表示',
       click: () => {
         mainWindow.show();
         if (mainWindow.isMinimized()) {
@@ -150,7 +150,7 @@ function createTray() {
   ]);
   
   tray.setContextMenu(contextMenu);
-  tray.setToolTip('Sigma BF Copy - カメラファイル自動コピー');
+  tray.setToolTip('BF Copy - カメラファイル自動コピー');
   
   // ダブルクリックでウィンドウを表示
   tray.on('double-click', () => {

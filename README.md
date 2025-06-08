@@ -1,10 +1,10 @@
-# Sigma BF Copy
+# BF Copy
 
-Sigma BFカメラから写真・動画をWindows/macOSに自動コピーするElectronアプリケーション
+BFカメラから写真・動画をWindows/macOSに自動コピーするElectronアプリケーション
 
 ## 機能
 
-- ✅ Sigma BFカメラのUSB自動検知
+- ✅ BFカメラのUSB自動検知
 - 📁 カメラ内フォルダの選択的コピー  
 - 🔄 写真・動画の自動分類
 - ⚙️ コピー先設定の保存・復元
@@ -44,7 +44,7 @@ npm run test:watch
 ## プロジェクト構造
 
 ```
-sigma-bf-copy/
+bf-copy/
 ├── src/
 │   ├── main/          # Electronメインプロセス
 │   │   ├── main.js    # アプリケーションエントリーポイント

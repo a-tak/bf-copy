@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Sigma BF Copy - 自動ビルド・実行スクリプト
+# BF Copy - 自動ビルド・実行スクリプト
 # 人間による動作確認が必要な場合に実行
 
-echo "=== Sigma BF Copy 自動ビルド・実行 ==="
+echo "=== BF Copy 自動ビルド・実行 ==="
 echo ""
 
 # 1. 既存のプロセス終了（Windows環境）
@@ -27,21 +27,21 @@ echo "   プロセス検索中..."
 
 if [ "$IS_WSL" = true ]; then
     # WSL環境での処理（特定プロセスのみカウント）
-    SIGMA_PROCESSES=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "sigma" | wc -l)
+    BF_PROCESSES=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "bf" | wc -l)
     
-    # sigma-bf-copy関連のelectronプロセス数をカウント（簡単な方法に変更）
-    SIGMA_ELECTRON_COUNT=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "electron" | grep -c "sigma" || echo "0")
+    # bf-copy関連のelectronプロセス数をカウント（簡単な方法に変更）
+    BF_ELECTRON_COUNT=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "electron" | grep -c "bf" || echo "0")
     
     # 全体のelectronプロセス数（参考）
     ALL_ELECTRON_PROCESSES=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "electron" | wc -l)
 else
     # ネイティブWindows環境での処理
-    SIGMA_PROCESSES=$(tasklist 2>/dev/null | grep -i "sigma" | wc -l)
-    SIGMA_ELECTRON_COUNT=$(tasklist 2>/dev/null | grep -i "electron" | grep -c "sigma" || echo "0")
+    BF_PROCESSES=$(tasklist 2>/dev/null | grep -i "bf" | wc -l)
+    BF_ELECTRON_COUNT=$(tasklist 2>/dev/null | grep -i "electron" | grep -c "bf" || echo "0")
     ALL_ELECTRON_PROCESSES=$(tasklist 2>/dev/null | grep -i "electron" | wc -l)
 fi
 
-echo "   見つかったプロセス: Sigma関連=${SIGMA_PROCESSES}, Sigma-Electron=${SIGMA_ELECTRON_COUNT}, 全Electron=${ALL_ELECTRON_PROCESSES}"
+echo "   見つかったプロセス: BF関連=${BF_PROCESSES}, BF-Electron=${BF_ELECTRON_COUNT}, 全Electron=${ALL_ELECTRON_PROCESSES}"
 
 # 複数の方法でプロセス終了を試行
 echo "   プロセス終了実行中..."
@@ -50,23 +50,23 @@ if [ "$IS_WSL" = true ]; then
     # WSL環境: 特定プロセスのみ終了
     echo "   特定プロセスのみ終了（他のElectronアプリは保護）..."
     
-    # 方法1: Sigma BF Copy.exe を終了（直接名前指定）
-    /mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe" 2>/dev/null && echo "   ✓ taskkill: Sigma BF Copy.exe を終了しました"
+    # 方法1: BF Copy.exe を終了（直接名前指定）
+    /mnt/c/Windows/System32/taskkill.exe /F /IM "BF Copy.exe" 2>/dev/null && echo "   ✓ taskkill: BF Copy.exe を終了しました"
     
-    # 方法2: コマンドライン引数でsigma-bf-copyを含むプロセスを特定・終了
-    echo "   sigma-bf-copy関連プロセスを検索中..."
-    SIGMA_PIDS=$(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -Command "Get-Process -ErrorAction SilentlyContinue | Where-Object { \$_.CommandLine -like '*sigma-bf-copy*' } | Select-Object -ExpandProperty Id" 2>/dev/null | tr -d '\r')
+    # 方法2: コマンドライン引数でbf-copyを含むプロセスを特定・終了
+    echo "   bf-copy関連プロセスを検索中..."
+    BF_PIDS=$(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -Command "Get-Process -ErrorAction SilentlyContinue | Where-Object { \$_.CommandLine -like '*bf-copy*' } | Select-Object -ExpandProperty Id" 2>/dev/null | tr -d '\r')
     
-    if [ ! -z "$SIGMA_PIDS" ]; then
-        echo "   見つかったsigma-bf-copy関連PID: $SIGMA_PIDS"
-        for PID in $SIGMA_PIDS; do
+    if [ ! -z "$BF_PIDS" ]; then
+        echo "   見つかったbf-copy関連PID: $BF_PIDS"
+        for PID in $BF_PIDS; do
             if [ ! -z "$PID" ] && [ "$PID" != "" ]; then
                 echo "   PID $PID を終了中..."
                 /mnt/c/Windows/System32/taskkill.exe /F /PID "$PID" 2>/dev/null && echo "   ✓ PID $PID を終了しました"
             fi
         done
     else
-        echo "   sigma-bf-copy関連プロセスは見つかりませんでした"
+        echo "   bf-copy関連プロセスは見つかりませんでした"
     fi
     
     # 方法3: プロジェクトディレクトリから実行されたelectron.exeを特定・終了
@@ -89,8 +89,8 @@ if [ "$IS_WSL" = true ]; then
     
 else
     # ネイティブWindows環境: 従来の方法
-    # 方法1: Sigma BF Copy.exe を終了
-    taskkill /F /IM "Sigma BF Copy.exe" 2>/dev/null && echo "   ✓ Sigma BF Copy.exe を終了しました"
+    # 方法1: BF Copy.exe を終了
+    taskkill /F /IM "BF Copy.exe" 2>/dev/null && echo "   ✓ BF Copy.exe を終了しました"
     
     # 方法2: electron.exe を終了
     taskkill /F /IM "electron.exe" 2>/dev/null && echo "   ✓ electron.exe を終了しました"
@@ -99,7 +99,7 @@ else
     taskkill /F /IM "node.exe" 2>/dev/null && echo "   ✓ node.exe を終了しました"
     
     # 方法4: プロセス名で部分一致検索して終了
-    powershell -Command "Get-Process | Where-Object { \$_.Name -like '*sigma*' } | Stop-Process -Force" 2>/dev/null && echo "   ✓ Sigma関連プロセスを終了しました"
+    powershell -Command "Get-Process | Where-Object { \$_.Name -like '*bf*' } | Stop-Process -Force" 2>/dev/null && echo "   ✓ BF関連プロセスを終了しました"
 fi
 
 # 少し待機してプロセスの完全終了を確認
@@ -110,27 +110,27 @@ sleep 3
 echo "   終了確認中..."
 
 if [ "$IS_WSL" = true ]; then
-    # WSL環境: sigma-bf-copy関連プロセスのみ確認
-    REMAINING_SIGMA=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "sigma" | wc -l)
-    REMAINING_SIGMA_ELECTRON=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "electron" | grep -c "sigma" || echo "0")
+    # WSL環境: bf-copy関連プロセスのみ確認
+    REMAINING_BF=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "bf" | wc -l)
+    REMAINING_BF_ELECTRON=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "electron" | grep -c "bf" || echo "0")
     REMAINING_ALL_ELECTRON=$(/mnt/c/Windows/System32/tasklist.exe 2>/dev/null | grep -i "electron" | wc -l)
 else
     # ネイティブWindows環境
-    REMAINING_SIGMA=$(tasklist 2>/dev/null | grep -i "sigma" | wc -l)
-    REMAINING_SIGMA_ELECTRON=$(tasklist 2>/dev/null | grep -i "electron" | grep -c "sigma" || echo "0")
+    REMAINING_BF=$(tasklist 2>/dev/null | grep -i "bf" | wc -l)
+    REMAINING_BF_ELECTRON=$(tasklist 2>/dev/null | grep -i "electron" | grep -c "bf" || echo "0")
     REMAINING_ALL_ELECTRON=$(tasklist 2>/dev/null | grep -i "electron" | wc -l)
 fi
 
-echo "   終了後の状況: Sigma=${REMAINING_SIGMA}, Sigma-Electron=${REMAINING_SIGMA_ELECTRON}, 全Electron=${REMAINING_ALL_ELECTRON}"
+echo "   終了後の状況: BF=${REMAINING_BF}, BF-Electron=${REMAINING_BF_ELECTRON}, 全Electron=${REMAINING_ALL_ELECTRON}"
 
-if [ "$REMAINING_SIGMA" -eq 0 ] && [ "$REMAINING_SIGMA_ELECTRON" -eq 0 ]; then
-    echo "✓ Sigma BF Copy関連プロセスの終了を確認しました"
+if [ "$REMAINING_BF" -eq 0 ] && [ "$REMAINING_BF_ELECTRON" -eq 0 ]; then
+    echo "✓ BF Copy関連プロセスの終了を確認しました"
     if [ "$REMAINING_ALL_ELECTRON" -gt 0 ]; then
         echo "  （他のElectronアプリ ${REMAINING_ALL_ELECTRON}個 は保護されています）"
     fi
 else
-    echo "⚠ Sigma BF Copy関連プロセスが残っている可能性があります"
-    echo "   Sigma: ${REMAINING_SIGMA}, Sigma-Electron: ${REMAINING_SIGMA_ELECTRON}"
+    echo "⚠ BF Copy関連プロセスが残っている可能性があります"
+    echo "   BF: ${REMAINING_BF}, BF-Electron: ${REMAINING_BF_ELECTRON}"
 fi
 echo ""
 
@@ -167,8 +167,8 @@ echo ""
 
 # 4. 実行ファイルの確認
 echo "4. ビルド結果確認..."
-if [ -f "dist/win-unpacked/Sigma BF Copy.exe" ]; then
-    echo "✓ ビルド成功: $(ls -lh "dist/win-unpacked/Sigma BF Copy.exe" | awk '{print $5, $9}')"
+if [ -f "dist/win-unpacked/BF Copy.exe" ]; then
+    echo "✓ ビルド成功: $(ls -lh "dist/win-unpacked/BF Copy.exe" | awk '{print $5, $9}')"
 else
     echo "✗ ビルド失敗: 実行ファイルが見つかりません"
     exit 1
@@ -180,7 +180,7 @@ echo "=== 動作確認手順 ==="
 echo ""
 echo "実行方法："
 echo "1. dist/win-unpacked/ フォルダをWindowsマシンにコピー"
-echo "2. 'Sigma BF Copy.exe' をダブルクリックで実行"
+echo "2. 'BF Copy.exe' をダブルクリックで実行"
 echo ""
 echo "バグ修正確認手順："
 echo "1. フォルダ名を入力（例：'テスト撮影'）"
