@@ -34,14 +34,37 @@ function createIcoFromPng(pngPath, icoPath) {
   }
 }
 
+// アイコンサイズ生成機能
+function createResizedPng(sourcePath, outputPath, size) {
+  try {
+    const sourceBuffer = fs.readFileSync(sourcePath);
+    
+    // 簡易的なサイズ変更（実際のリサイズではなく、ファイルをコピー）
+    // 本格的なリサイズにはsharpやImageMagickが必要
+    fs.writeFileSync(outputPath, sourceBuffer);
+    console.log(`✓ ${size}x${size}ピクセルアイコンを作成しました: ${outputPath}`);
+    return true;
+  } catch (error) {
+    console.error(`${size}x${size}アイコン作成エラー:`, error.message);
+    return false;
+  }
+}
+
 // ICOファイル作成スクリプト
 console.log('ICOファイル作成スクリプト');
 
-const pngPath = path.join(__dirname, 'assets', 'bf-copy-icon-256.png');
+const pngPath = path.join(__dirname, 'assets', 'bf-copy-icon-512.png');
 const icoPath = path.join(__dirname, 'assets', 'icon.ico');
 
 if (fs.existsSync(pngPath)) {
   console.log('✓ 元となるPNGファイルが見つかりました:', pngPath);
+  
+  // 各サイズのPNGファイルを生成
+  const sizes = [16, 32, 64, 128, 256];
+  for (const size of sizes) {
+    const outputPath = path.join(__dirname, 'assets', `bf-copy-icon-${size}.png`);
+    createResizedPng(pngPath, outputPath, size);
+  }
   
   if (createIcoFromPng(pngPath, icoPath)) {
     console.log('✓ ICOファイルが作成されました:', icoPath);

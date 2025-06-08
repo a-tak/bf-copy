@@ -39,7 +39,8 @@
     "appId": "com.atak.bf-copy",
     "productName": "BF Copy",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "assets"
     },
     "files": [
       "src/**/*",
@@ -60,7 +61,7 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "assets/bf-copy-icon-256.png",
+      "icon": "assets/icon.ico",
       "sign": null,
       "requestedExecutionLevel": "asInvoker",
       "publisherName": "A-tak"
@@ -74,8 +75,8 @@
       "allowToChangeInstallationDirectory": true,
       "createStartMenuShortcut": true,
       "runAfterFinish": false,
-      "installerIcon": "assets/bf-copy-icon-256.png",
-      "uninstallerIcon": "assets/bf-copy-icon-256.png"
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     }
   }
 }
