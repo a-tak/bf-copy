@@ -293,13 +293,16 @@ class SigmaBFCopy {
             console.log('コピー結果:', result);
 
             if (result.success) {
-                alert(`コピーが完了しました！\n\n写真: ${result.copiedPhotos}ファイル\n動画: ${result.copiedVideos}ファイル\n\n写真: ${result.photoDestPath}\n動画: ${result.videoDestPath}`);
+                // alert削除：フォーカス問題の原因
+                console.log(`コピーが完了しました！写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイル`);
+                console.log(`写真: ${result.photoDestPath}`);
+                console.log(`動画: ${result.videoDestPath}`);
             } else {
-                alert(`コピーに失敗しました: ${result.message}`);
+                console.error(`コピーに失敗しました: ${result.message}`);
             }
         } catch (error) {
             console.error('コピーエラー:', error);
-            alert(`コピー中にエラーが発生しました: ${error.message}`);
+            console.error(`コピー中にエラーが発生しました: ${error.message}`);
         }
     }
 
