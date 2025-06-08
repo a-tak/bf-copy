@@ -118,6 +118,20 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     const photoDestPath = generateDestinationPath(photoDestination, folderName);
     const videoDestPath = generateDestinationPath(videoDestination, folderName);
 
+    // 上書禁止: 既存フォルダの存在チェック
+    const overwriteCheck = await checkForExistingFolders(photoDestPath, videoDestPath, sourceFolderPath);
+    if (overwriteCheck.hasConflict) {
+      console.log('上書禁止: 既存フォルダが検出されました', overwriteCheck.conflictPath);
+      return {
+        success: false,
+        message: `フォルダが既に存在します: ${overwriteCheck.conflictPath}`,
+        overwritePrevented: true,
+        conflictPath: overwriteCheck.conflictPath,
+        photoDestPath,
+        videoDestPath
+      };
+    }
+
     // ソースフォルダからファイル一覧を取得
     const sourceFiles = await fs.readdir(sourceFolderPath);
     
@@ -248,6 +262,66 @@ function generateDestinationPath(destination, folderName) {
   return path.join(destination, destFolderName, 'BF');
 }
 
+async function checkForExistingFolders(photoDestPath, videoDestPath, sourceFolderPath) {
+  // 上書禁止機能: 既存フォルダの存在チェック
+  const fs = require('fs-extra');
+  const path = require('path');
+  
+  try {
+    // ソースフォルダ内のファイルを分析して、どのタイプのフォルダが必要かを判定
+    const sourceFiles = await fs.readdir(sourceFolderPath);
+    let needsPhotoFolder = false;
+    let needsVideoFolder = false;
+    
+    for (const fileName of sourceFiles) {
+      const sourceFilePath = path.join(sourceFolderPath, fileName);
+      try {
+        const stats = await fs.stat(sourceFilePath);
+        if (!stats.isFile()) continue;
+        
+        const fileType = classifyFileType(fileName);
+        if (fileType === 'photo') {
+          needsPhotoFolder = true;
+        } else if (fileType === 'video') {
+          needsVideoFolder = true;
+        }
+      } catch (error) {
+        // ファイル読み取りエラーは無視
+        continue;
+      }
+    }
+    
+    // 必要なフォルダのみ存在チェックを実行
+    if (needsPhotoFolder && await fs.pathExists(photoDestPath)) {
+      return {
+        hasConflict: true,
+        conflictPath: photoDestPath
+      };
+    }
+    
+    if (needsVideoFolder && await fs.pathExists(videoDestPath)) {
+      return {
+        hasConflict: true,
+        conflictPath: videoDestPath
+      };
+    }
+    
+    return {
+      hasConflict: false,
+      conflictPath: null
+    };
+    
+  } catch (error) {
+    console.error('フォルダ存在チェックエラー:', error);
+    // エラーが発生した場合は安全のため競合ありとして扱う
+    return {
+      hasConflict: true,
+      conflictPath: photoDestPath,
+      error: error.message
+    };
+  }
+}
+
 module.exports = {
   getCameraFolders,
   parseFolderDate,
@@ -255,4 +329,5 @@ module.exports = {
   copyFiles,
   classifyFileType,
   generateDestinationPath,
+  checkForExistingFolders,
 };
