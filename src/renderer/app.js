@@ -349,7 +349,7 @@ class SigmaBFCopy {
 
     showAutoStartDialog() {
         const result = confirm(
-            'Sigma BF Copy を Windows 起動時に自動で開始しますか？\n\n' +
+            'BF Copy を Windows 起動時に自動で開始しますか？\n\n' +
             'カメラが接続されたときに素早くファイルをコピーできるようになります。\n' +
             '自動起動を有効にする場合は「OK」を、無効にする場合は「キャンセル」を選択してください。'
         );

@@ -83,17 +83,17 @@ async function detectSigmaCamera() {
         }
       }
       
-      // Sigma BFを探す
-      const sigmaDrive = drives.find(drive => 
-        drive.label && drive.label.toLowerCase().includes('sigma')
+      // BFカメラを探す
+      const bfDrive = drives.find(drive => 
+        drive.label && (drive.label.toLowerCase().includes('sigma') || drive.label.toLowerCase().includes('bf'))
       );
       
-      return sigmaDrive || drives[0] || null; // Sigmaが見つからない場合は最初のDCIMドライブを返す
+      return bfDrive || drives[0] || null; // BFカメラが見つからない場合は最初のDCIMドライブを返す
     }
     
     return null;
   } catch (error) {
-    console.error('Sigma カメラ検知エラー:', error);
+    console.error('BF カメラ検知エラー:', error);
     return null;
   }
 }

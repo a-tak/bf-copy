@@ -5,7 +5,7 @@
 - **コミュニケーション**: 日本語でのやり取りを優先
 
 ## プロジェクト概要
-Sigma BFカメラから写真・動画をWindows/macOSに自動コピーするElectronアプリケーション
+BFカメラから写真・動画をWindows/macOSに自動コピーするElectronアプリケーション
 
 ## 開発ガイドライン
 - コメントやドキュメントは日本語で記述
@@ -69,11 +69,11 @@ Sigma BFカメラから写真・動画をWindows/macOSに自動コピーするEl
 # または手動実行の場合：
 
 # 1. WSL環境でのプロセス終了（PowerShell経由）
-powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*'} | Stop-Process -Force"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*bf*'} | Stop-Process -Force"
 powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*electron*'} | Stop-Process -Force"
 
 # 2. 代替方法（Windowsコマンド直接指定）
-/mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe"
+/mnt/c/Windows/System32/taskkill.exe /F /IM "BF Copy.exe"
 /mnt/c/Windows/System32/taskkill.exe /F /IM "electron.exe"
 
 # 3. ビルドファイルクリーンアップ
@@ -83,22 +83,22 @@ rm -rf dist
 npm run pack
 
 # 5. 実行確認
-ls -la dist/win-unpacked/"Sigma BF Copy.exe"
+ls -la dist/win-unpacked/"BF Copy.exe"
 ```
 
 ### プロセス管理コマンド
 
 ```bash
 # WSL環境での確実なプロセス終了
-powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*'} | Stop-Process -Force"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*bf*'} | Stop-Process -Force"
 powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*electron*'} | Stop-Process -Force"
 
 # 実行中プロセス確認（WSL環境）
-powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*sigma*' -or $_.ProcessName -like '*electron*'}"
+powershell.exe -Command "Get-Process | Where-Object {$_.ProcessName -like '*bf*' -or $_.ProcessName -like '*electron*'}"
 
 # 代替方法（Windowsコマンド直接）
-/mnt/c/Windows/System32/taskkill.exe /F /IM "Sigma BF Copy.exe"
-/mnt/c/Windows/System32/tasklist.exe | grep -i "sigma"
+/mnt/c/Windows/System32/taskkill.exe /F /IM "BF Copy.exe"
+/mnt/c/Windows/System32/tasklist.exe | grep -i "bf"
 
 # 開発モードで実行
 npm start
@@ -107,5 +107,45 @@ npm start
 ### ビルド設定
 - **Windows用ビルド**: `npm run pack` (WSL環境でも実行可能)
 - **完全インストーラー**: Windows環境で `npm run build-win` を実行
-- **出力先**: `dist/win-unpacked/Sigma BF Copy.exe`
+- **出力先**: `dist/win-unpacked/BF Copy.exe`
+
+## Windows版インストーラー作成
+
+### インストーラー作成コマンド
+Windows PowerShell環境で実行：
+
+```powershell
+# Windows版インストーラーを作成
+npm run build-win
+
+# または直接electron-builderを実行
+npx electron-builder --win
+```
+
+### 出力ファイル
+```
+dist/
+├── win-unpacked/                    # ポータブル版
+│   └── BF Copy.exe
+├── BF Copy Setup 1.0.0.exe         # インストーラー
+└── latest.yml                      # 自動更新用メタデータ
+```
+
+### インストーラーの特徴
+- **形式**: NSIS (.exe形式)
+- **コード署名**: なし（個人使用・小規模配布向け）
+- **ワンクリックインストール**: 無効（ユーザーが設定可能）
+- **インストールディレクトリ変更**: 可能
+- **スタートメニューショートカット**: 作成
+- **インストール完了後の自動実行**: 無効
+
+### ユーザー向けインストール手順
+1. `BF Copy Setup 1.0.0.exe` をダブルクリック
+2. **「WindowsによってPCが保護されました」が表示された場合**：
+   - 「詳細情報」をクリック
+   - 「実行」ボタンをクリック
+3. インストーラーの指示に従ってインストール
+4. スタートメニューから「BF Copy」を起動
+
+**注意**: コード署名なしのため初回実行時にWindows Defender SmartScreenが警告を表示しますが、アプリケーションの機能には影響ありません。
 

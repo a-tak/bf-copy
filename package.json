@@ -1,7 +1,7 @@
 {
-  "name": "sigma-bf-copy",
+  "name": "bf-copy",
   "version": "1.0.0",
-  "description": "Sigma BF Camera File Copy Application",
+  "description": "BF Camera File Copy Application",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
@@ -17,7 +17,7 @@
     "electron",
     "camera",
     "file-copy",
-    "sigma-bf"
+    "bf"
   ],
   "author": "A-tak <hoge+git@a-tak.com>",
   "license": "MIT",
@@ -35,8 +35,8 @@
     "fs-extra": "^11.1.1"
   },
   "build": {
-    "appId": "com.atak.sigma-bf-copy",
-    "productName": "Sigma BF Copy",
+    "appId": "com.atak.bf-copy",
+    "productName": "BF Copy",
     "directories": {
       "output": "dist"
     },
@@ -47,11 +47,12 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/sigma-bf-icon-256.png"
+      "icon": "assets/bf-copy-icon-256.png",
+      "sign": null
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/sigma-bf-icon-512.png"
+      "icon": "assets/bf-copy-icon-512.png"
     },
     "nsis": {
       "oneClick": false,
