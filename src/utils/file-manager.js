@@ -101,7 +101,7 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
 }
 
-async function copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName) {
+async function copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, progressCallback) {
   // テストで要求されたファイルコピー機能を実装
   const fs = require('fs-extra');
   const path = require('path');
@@ -118,10 +118,6 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     const photoDestPath = generateDestinationPath(photoDestination, folderName);
     const videoDestPath = generateDestinationPath(videoDestination, folderName);
 
-    // コピー先フォルダを作成
-    await fs.ensureDir(photoDestPath);
-    await fs.ensureDir(videoDestPath);
-
     // ソースフォルダからファイル一覧を取得
     const sourceFiles = await fs.readdir(sourceFolderPath);
     
@@ -135,6 +131,11 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       videoDestPath
     };
 
+    // 先にファイルを分類して、必要なフォルダのみ作成する
+    const filesToCopy = [];
+    let hasPhotos = false;
+    let hasVideos = false;
+
     for (const fileName of sourceFiles) {
       const sourceFilePath = path.join(sourceFolderPath, fileName);
       const stats = await fs.stat(sourceFilePath);
@@ -145,11 +146,31 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       
       // ファイル拡張子で写真/動画を判定
       const fileType = classifyFileType(fileName);
+      filesToCopy.push({ fileName, sourceFilePath, fileType });
+      
+      if (fileType === 'photo') {
+        hasPhotos = true;
+      } else if (fileType === 'video') {
+        hasVideos = true;
+      }
+    }
+
+    // 対象ファイルがある場合のみ、コピー先フォルダを作成
+    if (hasPhotos) {
+      await fs.ensureDir(photoDestPath);
+    }
+    if (hasVideos) {
+      await fs.ensureDir(videoDestPath);
+    }
+
+    // ファイルをコピー
+    let copiedCount = 0;
+    for (const { fileName, sourceFilePath, fileType } of filesToCopy) {
       let destPath;
       
       if (fileType === 'photo') {
         destPath = path.join(photoDestPath, fileName);
-      } else {
+      } else { // fileType === 'video'
         destPath = path.join(videoDestPath, fileName);
       }
 
@@ -162,11 +183,23 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
         
         if (fileType === 'photo') {
           copyResults.copiedPhotos++;
-        } else {
+        } else { // fileType === 'video'
           copyResults.copiedVideos++;
         }
         
-        console.log(`コピー完了: ${fileName} -> ${fileType}`);
+        copiedCount++;
+        
+        // 進行状況をコールバック
+        if (progressCallback) {
+          progressCallback({
+            current: copiedCount,
+            total: copyResults.totalFiles,
+            fileName: fileName,
+            percentage: Math.round((copiedCount / copyResults.totalFiles) * 100)
+          });
+        }
+        
+        console.log(`コピー完了: ${fileName} -> ${fileType} (${copiedCount}/${copyResults.totalFiles})`);
         
       } catch (error) {
         console.error(`ファイルコピーエラー: ${fileName}`, error);
