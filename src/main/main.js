@@ -17,8 +17,12 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, '../../assets/bf-copy-icon-256.png'),
-    show: !app.getLoginItemSettings().wasOpenedAsHidden // OS起動時は非表示で開始
+    show: !app.getLoginItemSettings().wasOpenedAsHidden, // OS起動時は非表示で開始
+    autoHideMenuBar: true // メニューバーを自動非表示
   });
+
+  // メニューバーを完全に非表示
+  mainWindow.setMenuBarVisibility(false);
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
