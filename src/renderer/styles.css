@@ -274,6 +274,92 @@ button.primary:hover {
     margin-top: 25px;
 }
 
+/* 通知システム */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    max-width: 400px;
+}
+
+.notification {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.info {
+    border-left: 4px solid #3182ce;
+}
+
+.notification.success {
+    border-left: 4px solid #38a169;
+}
+
+.notification.warning {
+    border-left: 4px solid #ed8936;
+}
+
+.notification.error {
+    border-left: 4px solid #e53e3e;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #718096;
+    cursor: pointer;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.notification-close:hover {
+    color: #2d3748;
+}
+
+.notification-body {
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-end;
+}
+
+.notification-actions button {
+    padding: 8px 16px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
 /* ユーティリティ */
 .hidden {
     display: none !important;

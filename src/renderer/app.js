@@ -104,7 +104,7 @@ class SigmaBFCopy {
         const videoDestination = document.getElementById('video-destination').value;
 
         if (!photoDestination || !videoDestination) {
-            alert('写真と動画のコピー先フォルダを両方選択してください');
+            this.showNotification('error', 'エラー', '写真と動画のコピー先フォルダを両方選択してください');
             return;
         }
 
@@ -246,12 +246,16 @@ class SigmaBFCopy {
         const folderName = document.getElementById('folder-name').value.trim();
         
         if (!folderName) {
-            alert('フォルダ名を入力してください');
+            this.showNotification('error', 'エラー', 'フォルダ名を入力してください');
+            // フォルダ名フィールドにフォーカスを当てる
+            setTimeout(() => {
+                document.getElementById('folder-name').focus();
+            }, 100);
             return;
         }
 
         if (!this.selectedFolder) {
-            alert('コピーするフォルダを選択してください');
+            this.showNotification('error', 'エラー', 'コピーするフォルダを選択してください');
             return;
         }
 
@@ -316,7 +320,7 @@ class SigmaBFCopy {
         const videoDestination = document.getElementById('settings-video-dest').value;
 
         if (!photoDestination || !videoDestination) {
-            alert('写真と動画のコピー先フォルダを両方選択してください');
+            this.showNotification('error', 'エラー', '写真と動画のコピー先フォルダを両方選択してください');
             return;
         }
 
@@ -343,20 +347,107 @@ class SigmaBFCopy {
     }
 
     showAutoStartDialog() {
-        const result = confirm(
-            'BF Copy を Windows 起動時に自動で開始しますか？\n\n' +
-            'カメラが接続されたときに素早くファイルをコピーできるようになります。\n' +
-            '自動起動を有効にする場合は「OK」を、無効にする場合は「キャンセル」を選択してください。'
+        // フォーカス干渉を回避するため、alert/confirmの代わりに通知システムを使用
+        this.showNotification(
+            'info',
+            '自動起動設定',
+            'BF Copy を Windows 起動時に自動で開始しますか？カメラが接続されたときに素早くファイルをコピーできるようになります。',
+            [
+                {
+                    text: 'はい',
+                    action: () => {
+                        window.electronAPI.setAutoStart(true);
+                        this.showNotification('success', '設定完了', '自動起動が有効になりました。次回からWindows起動時にアプリが自動で開始されます。');
+                    }
+                },
+                {
+                    text: 'いいえ',
+                    action: () => {
+                        console.log('自動起動設定をキャンセルしました');
+                    }
+                }
+            ]
         );
-        
-        if (result) {
-            window.electronAPI.setAutoStart(true);
-            alert('自動起動が有効になりました。次回からWindows起動時にアプリが自動で開始されます。');
+    }
+
+    // 通知システム（フォーカス干渉を回避するためのalert/confirm代替）
+    showNotification(type, title, message, actions = null) {
+        const container = document.getElementById('notification-container');
+        if (!container) {
+            console.error('通知コンテナが見つかりません');
+            return;
+        }
+
+        const notificationId = 'notification-' + Date.now();
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.id = notificationId;
+
+        let actionsHtml = '';
+        if (actions && actions.length > 0) {
+            actionsHtml = `
+                <div class="notification-actions">
+                    ${actions.map((action, index) => 
+                        `<button onclick="window.currentApp.handleNotificationAction('${notificationId}', ${index})">${action.text}</button>`
+                    ).join('')}
+                </div>
+            `;
+        }
+
+        notification.innerHTML = `
+            <div class="notification-header">
+                <div class="notification-title">${title}</div>
+                <button class="notification-close" onclick="window.currentApp.hideNotification('${notificationId}')">&times;</button>
+            </div>
+            <div class="notification-body">${message}</div>
+            ${actionsHtml}
+        `;
+
+        // アクション情報を保存
+        if (actions) {
+            notification._actions = actions;
+        }
+
+        container.appendChild(notification);
+
+        // アニメーション表示
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        // 自動非表示（アクションがない場合のみ）
+        if (!actions) {
+            setTimeout(() => {
+                this.hideNotification(notificationId);
+            }, 5000);
+        }
+    }
+
+    hideNotification(notificationId) {
+        const notification = document.getElementById(notificationId);
+        if (notification) {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }
+
+    handleNotificationAction(notificationId, actionIndex) {
+        const notification = document.getElementById(notificationId);
+        if (notification && notification._actions && notification._actions[actionIndex]) {
+            const action = notification._actions[actionIndex];
+            if (action.action) {
+                action.action();
+            }
+            this.hideNotification(notificationId);
         }
     }
 }
 
 // アプリケーション開始
 document.addEventListener('DOMContentLoaded', () => {
-    new SigmaBFCopy();
+    window.currentApp = new SigmaBFCopy();
 });
