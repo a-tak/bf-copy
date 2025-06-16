@@ -364,9 +364,17 @@ class SigmaBFCopy {
             [
                 {
                     text: 'はい',
-                    action: () => {
-                        window.electronAPI.setAutoStart(true);
-                        this.showNotification('success', '設定完了', '自動起動が有効になりました。次回からWindows起動時にアプリが自動で開始されます。');
+                    action: async () => {
+                        const result = await window.electronAPI.setAutoStart(true);
+                        if (result.success) {
+                            if (result.wasAlreadySet) {
+                                this.showNotification('info', '既に設定済み', '自動起動は既に有効になっています。');
+                            } else {
+                                this.showNotification('success', '設定完了', '自動起動が有効になりました。次回からWindows起動時にアプリが自動で開始されます。');
+                            }
+                        } else {
+                            this.showNotification('error', '設定エラー', `自動起動の設定に失敗しました: ${result.message}`);
+                        }
                     }
                 },
                 {

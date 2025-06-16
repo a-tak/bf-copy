@@ -22,7 +22,7 @@ module.exports = {
   moduleFileExtensions: ['js', 'json'],
   
   // Node.jsモジュールのモック設定
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^electron$': '<rootDir>/tests/__mocks__/electron.js'
   },
   

@@ -7,6 +7,22 @@ let mainWindow;
 let tray = null;
 let isQuiting = false;
 
+// シングルインスタンス制御
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // 2番目のインスタンスが起動されたときに、最初のインスタンスのウィンドウをアクティブにする
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -135,12 +151,16 @@ function createTray() {
     {
       label: '起動時に自動開始',
       type: 'checkbox',
-      checked: app.getLoginItemSettings().openAtLogin,
+      checked: autoStartManager.getAutoStartStatus().openAtLogin,
       click: (menuItem) => {
-        app.setLoginItemSettings({
-          openAtLogin: menuItem.checked,
-          openAsHidden: true // 起動時は非表示で開始
-        });
+        const result = autoStartManager.setAutoStart(menuItem.checked);
+        if (!result.success) {
+          console.error('自動起動設定の変更に失敗:', result.message);
+        } else if (result.wasAlreadySet) {
+          console.log('自動起動設定は既に設定済み:', result.message);
+        } else {
+          console.log('自動起動設定を変更しました:', result.message);
+        }
       }
     },
     { type: 'separator' },
@@ -174,7 +194,10 @@ app.whenReady().then(() => {
   startCameraMonitoring();
   
   // 初回起動時に自動起動を有効にするかユーザーに確認
-  if (!app.getLoginItemSettings().openAtLogin && !process.argv.includes('--dev')) {
+  const currentAutoStartStatus = autoStartManager.getAutoStartStatus();
+  autoStartManager.logAutoStartDetails(); // デバッグ情報を出力
+  
+  if (!currentAutoStartStatus.openAtLogin && !process.argv.includes('--dev')) {
     setTimeout(() => {
       if (mainWindow) {
         mainWindow.webContents.send('ask-auto-start');
@@ -201,6 +224,9 @@ app.on('activate', () => {
 
 // TDD実装済みのユーティリティモジュールを使用
 const { loadConfig, saveConfig } = require('../utils/config-manager');
+
+// 自動起動設定管理モジュール
+const autoStartManager = require('../utils/auto-start-manager');
 
 // 設定読み込み
 ipcMain.handle('load-config', async () => {
@@ -265,9 +291,7 @@ ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, v
 
 // 自動起動設定
 ipcMain.handle('set-auto-start', (event, enabled) => {
-  app.setLoginItemSettings({
-    openAtLogin: enabled,
-    openAsHidden: enabled // 自動起動時は非表示で開始
-  });
-  return true;
+  const result = autoStartManager.setAutoStart(enabled);
+  console.log('自動起動設定結果:', result);
+  return result;
 });
