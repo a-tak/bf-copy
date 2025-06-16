@@ -7,6 +7,22 @@ let mainWindow;
 let tray = null;
 let isQuiting = false;
 
+// シングルインスタンス制御
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // 2番目のインスタンスが起動されたときに、最初のインスタンスのウィンドウをアクティブにする
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
