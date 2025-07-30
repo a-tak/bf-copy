@@ -324,9 +324,12 @@ async function checkForExistingFolders(photoDestPath, videoDestPath, sourceFolde
 async function getImageThumbnails(folderPath) {
   const fs = require('fs-extra');
   const path = require('path');
-  const sharp = require('sharp');
+  const { getCachedThumbnail, setCachedThumbnail, initializeThumbnailCache } = require('./thumbnail-cache');
   
   try {
+    // キャッシュシステムを初期化
+    await initializeThumbnailCache();
+    
     // フォルダが存在するかチェック
     if (!await fs.pathExists(folderPath)) {
       return [];
@@ -344,23 +347,42 @@ async function getImageThumbnails(folderPath) {
     // 最大5ファイルまで制限
     const selectedFiles = jpegFiles.slice(0, 5);
     
-    // 各画像ファイルのサムネイルを生成
-    const thumbnails = [];
-    for (const fileName of selectedFiles) {
+    // 並列処理でサムネイルを取得または生成
+    const thumbnailPromises = selectedFiles.map(async (fileName) => {
       try {
         const filePath = path.join(folderPath, fileName);
-        const thumbnailData = await resizeImageToThumbnail(filePath);
         
-        thumbnails.push({
+        // キャッシュから取得を試行
+        let thumbnailData = await getCachedThumbnail(filePath);
+        
+        if (!thumbnailData) {
+          // キャッシュにない場合は新規生成
+          console.log(`サムネイル生成中: ${fileName}`);
+          thumbnailData = await resizeImageToThumbnail(filePath);
+          
+          // 生成したサムネイルをキャッシュに保存
+          await setCachedThumbnail(filePath, thumbnailData);
+          console.log(`サムネイルキャッシュ保存: ${fileName}`);
+        } else {
+          console.log(`サムネイルキャッシュヒット: ${fileName}`);
+        }
+        
+        return {
           fileName: fileName,
           filePath: filePath,
           base64Data: thumbnailData
-        });
+        };
       } catch (error) {
-        console.error(`サムネイル生成エラー: ${fileName}`, error);
-        // エラーが発生した画像はスキップして続行
+        console.error(`サムネイル処理エラー: ${fileName}`, error);
+        return null;
       }
-    }
+    });
+    
+    // 全ての並列処理の完了を待機
+    const results = await Promise.all(thumbnailPromises);
+    
+    // nullを除外して有効なサムネイルのみを返す
+    const thumbnails = results.filter(result => result !== null);
     
     return thumbnails;
   } catch (error) {

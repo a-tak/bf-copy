@@ -75,6 +75,17 @@ function startCameraMonitoring() {
       if (currentCamera && !lastDetectedCamera) {
         console.log('BFカメラが新しく接続されました:', currentCamera);
         
+        // カメラ検知時にキャッシュクリーンアップを実行
+        try {
+          const { cleanupOrphanedCache } = require('../utils/thumbnail-cache');
+          const cleanupResult = await cleanupOrphanedCache();
+          if (cleanupResult.deletedCount > 0) {
+            console.log(`孤立キャッシュを削除しました: ${cleanupResult.deletedCount}個`);
+          }
+        } catch (error) {
+          console.error('カメラ検知時のキャッシュクリーンアップエラー:', error);
+        }
+        
         // ウィンドウをアクティブ化
         activateMainWindow();
         
@@ -186,9 +197,18 @@ function createTray() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
   createTray();
+  
+  // キャッシュシステムの初期化とクリーンアップ
+  try {
+    const { performMaintenanceCleanup } = require('../utils/thumbnail-cache');
+    await performMaintenanceCleanup();
+    console.log('サムネイルキャッシュのクリーンアップが完了しました');
+  } catch (error) {
+    console.error('キャッシュクリーンアップエラー:', error);
+  }
   
   // カメラ監視を開始
   startCameraMonitoring();
