@@ -10,15 +10,15 @@ BFカメラから写真・動画をWindows/macOSに自動コピーするElectron
 - ⚙️ コピー先設定の保存・復元
 - 📊 コピー進行状況の表示
 
+## インストール
+
+https://github.com/a-tak/bf-copy/releases
+
 ## 開発環境セットアップ
 
 ### 必要要件
 - Node.js 16+
 - npm または yarn
-
-### インストール
-
-https://github.com/a-tak/bf-copy/releases
 
 ### ビルド
 ```bash
