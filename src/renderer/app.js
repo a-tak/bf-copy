@@ -241,9 +241,17 @@ class SigmaBFCopy {
             const thumbnailContainer = folderElement.querySelector('.folder-thumbnails');
             
             if (thumbnails.length > 0) {
-                thumbnailContainer.innerHTML = thumbnails.map(thumbnail => 
-                    `<img src="${thumbnail.base64Data}" alt="${thumbnail.fileName}" class="thumbnail" title="${thumbnail.fileName}">`
+                thumbnailContainer.innerHTML = thumbnails.map((thumbnail, index) => 
+                    `<img src="${thumbnail.base64Data}" 
+                          alt="${thumbnail.fileName}" 
+                          class="thumbnail" 
+                          title="${thumbnail.fileName}"
+                          data-thumbnail-index="${index}"
+                          data-folder-path="${folderPath}">`
                 ).join('');
+                
+                // サムネイルクリックイベントを追加
+                this.addThumbnailClickEvents(thumbnailContainer, thumbnails, folderPath);
             } else {
                 thumbnailContainer.innerHTML = '<div class="no-thumbnails">📷 JPEG画像なし</div>';
             }
@@ -489,6 +497,207 @@ class SigmaBFCopy {
                 action.action();
             }
             this.hideNotification(notificationId);
+        }
+    }
+
+    // 画像拡大表示機能
+    addThumbnailClickEvents(container, thumbnails, folderPath) {
+        const thumbnailImages = container.querySelectorAll('.thumbnail');
+        
+        thumbnailImages.forEach((img, index) => {
+            img.addEventListener('click', () => {
+                this.openImageModal(thumbnails, index, folderPath);
+            });
+        });
+    }
+
+    openImageModal(thumbnails, initialIndex, folderPath) {
+        this.currentThumbnails = thumbnails;
+        this.currentImageIndex = initialIndex;
+        this.currentFolderPath = folderPath;
+        
+        const modal = document.getElementById('image-modal');
+        const modalImage = document.getElementById('modal-image');
+        const imageFilename = document.getElementById('image-filename');
+        const imageDetails = document.getElementById('image-details');
+        const imageCounter = document.getElementById('image-counter');
+        const prevButton = document.getElementById('prev-image');
+        const nextButton = document.getElementById('next-image');
+        
+        // モーダルを表示
+        modal.classList.remove('hidden');
+        
+        // 現在の画像を表示
+        this.displayModalImage();
+        
+        // ナビゲーションボタンのイベントリスナーを設定
+        if (!this.modalEventListenersAdded) {
+            this.setupModalEventListeners();
+            this.modalEventListenersAdded = true;
+        }
+        
+        // 背景スクロールを無効化
+        document.body.style.overflow = 'hidden';
+    }
+
+    displayModalImage() {
+        const thumbnail = this.currentThumbnails[this.currentImageIndex];
+        const modalImage = document.getElementById('modal-image');
+        const imageFilename = document.getElementById('image-filename');
+        const imageDetails = document.getElementById('image-details');
+        const imageCounter = document.getElementById('image-counter');
+        const prevButton = document.getElementById('prev-image');
+        const nextButton = document.getElementById('next-image');
+        const loadingSpinner = document.getElementById('image-loading');
+        
+        // ローディング表示
+        loadingSpinner.classList.remove('hidden');
+        modalImage.style.opacity = '0';
+        
+        // 画像情報を更新
+        imageFilename.textContent = thumbnail.fileName;
+        imageDetails.textContent = `${this.currentImageIndex + 1} / ${this.currentThumbnails.length}`;
+        imageCounter.textContent = `${this.currentImageIndex + 1} / ${this.currentThumbnails.length}`;
+        
+        // ナビゲーションボタンの状態を更新
+        prevButton.disabled = this.currentImageIndex === 0;
+        nextButton.disabled = this.currentImageIndex === this.currentThumbnails.length - 1;
+        
+        // まずサムネイル画像を即座に表示
+        modalImage.src = thumbnail.base64Data;
+        modalImage.alt = thumbnail.fileName;
+        modalImage.style.opacity = '0.7'; // サムネイル表示時は少し薄く
+        
+        // フルサイズ画像を非同期で読み込み
+        this.loadFullSizeImage(thumbnail.filePath, modalImage, loadingSpinner);
+        
+        // 画像読み込み失敗時の処理（サムネイル用）
+        modalImage.onerror = () => {
+            loadingSpinner.classList.add('hidden');
+            modalImage.style.opacity = '1';
+            console.error('画像の読み込みに失敗しました:', thumbnail.fileName);
+        };
+    }
+
+    setupModalEventListeners() {
+        const modal = document.getElementById('image-modal');
+        const closeButton = document.getElementById('close-image-modal');
+        const prevButton = document.getElementById('prev-image');
+        const nextButton = document.getElementById('next-image');
+        const overlay = modal.querySelector('.image-modal-overlay');
+        
+        // 閉じるボタン
+        closeButton.addEventListener('click', () => {
+            this.closeImageModal();
+        });
+        
+        // オーバーレイクリックで閉じる
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.closeImageModal();
+            }
+        });
+        
+        // 前の画像ボタン
+        prevButton.addEventListener('click', () => {
+            this.showPreviousImage();
+        });
+        
+        // 次の画像ボタン
+        nextButton.addEventListener('click', () => {
+            this.showNextImage();
+        });
+        
+        // キーボードショートカット
+        this.modalKeyboardHandler = (e) => {
+            // モーダルが開いている時のみ処理
+            if (!modal.classList.contains('hidden')) {
+                switch (e.key) {
+                    case 'Escape':
+                        e.preventDefault();
+                        this.closeImageModal();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        this.showPreviousImage();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        this.showNextImage();
+                        break;
+                }
+            }
+        };
+        
+        document.addEventListener('keydown', this.modalKeyboardHandler);
+    }
+
+    closeImageModal() {
+        const modal = document.getElementById('image-modal');
+        modal.classList.add('hidden');
+        
+        // 背景スクロールを再有効化
+        document.body.style.overflow = '';
+        
+        // キーボードイベントリスナーを削除
+        if (this.modalKeyboardHandler) {
+            document.removeEventListener('keydown', this.modalKeyboardHandler);
+            this.modalKeyboardHandler = null;
+        }
+        
+        // データをクリア
+        this.currentThumbnails = null;
+        this.currentImageIndex = 0;
+        this.currentFolderPath = null;
+    }
+
+    showPreviousImage() {
+        if (this.currentImageIndex > 0) {
+            this.currentImageIndex--;
+            this.displayModalImage();
+        }
+    }
+
+    showNextImage() {
+        if (this.currentImageIndex < this.currentThumbnails.length - 1) {
+            this.currentImageIndex++;
+            this.displayModalImage();
+        }
+    }
+
+    async loadFullSizeImage(imagePath, modalImage, loadingSpinner) {
+        try {
+            console.log('フルサイズ画像読み込み開始:', imagePath);
+            
+            // フルサイズ画像を取得
+            const fullSizeImageData = await window.electronAPI.getFullSizeImage(imagePath);
+            
+            // 新しい画像要素を作成して先読み
+            const tempImage = new Image();
+            
+            tempImage.onload = () => {
+                // フルサイズ画像の読み込みが完了したら置き換え
+                modalImage.src = fullSizeImageData;
+                modalImage.style.opacity = '1';
+                loadingSpinner.classList.add('hidden');
+                console.log('フルサイズ画像読み込み完了:', imagePath);
+            };
+            
+            tempImage.onerror = () => {
+                // フルサイズ画像の読み込みに失敗した場合はサムネイルのまま
+                modalImage.style.opacity = '1';
+                loadingSpinner.classList.add('hidden');
+                console.error('フルサイズ画像読み込み失敗:', imagePath);
+            };
+            
+            // 先読み開始
+            tempImage.src = fullSizeImageData;
+            
+        } catch (error) {
+            // API呼び出しに失敗した場合もサムネイルのまま
+            modalImage.style.opacity = '1';
+            loadingSpinner.classList.add('hidden');
+            console.error('フルサイズ画像取得エラー:', error);
         }
     }
 }

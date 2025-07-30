@@ -25,8 +25,8 @@ if (!gotTheLock) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 800,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -287,6 +287,12 @@ ipcMain.handle('get-camera-folders', async (event, cameraPath) => {
 // フォルダサムネイル取得
 ipcMain.handle('get-folder-thumbnails', async (event, folderPath) => {
   return await getImageThumbnails(folderPath);
+});
+
+// フルサイズ画像取得
+ipcMain.handle('get-full-size-image', async (event, imagePath) => {
+  const { getFullSizeImage } = require('../utils/file-manager');
+  return await getFullSizeImage(imagePath);
 });
 
 // フォルダサイズとファイルサイズフォーマット関数はutilsモジュールに移動済み

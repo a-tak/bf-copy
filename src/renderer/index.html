@@ -129,6 +129,40 @@
                 </div>
             </div>
         </div>
+
+        <!-- 画像拡大表示モーダル -->
+        <div id="image-modal" class="image-modal hidden">
+            <div class="image-modal-overlay">
+                <div class="image-modal-content">
+                    <button class="image-modal-close" id="close-image-modal" aria-label="閉じる">×</button>
+                    
+                    <div class="image-container">
+                        <div class="loading-spinner hidden" id="image-loading">
+                            <div class="spinner"></div>
+                            <span>読み込み中...</span>
+                        </div>
+                        <img id="modal-image" alt="" class="modal-image">
+                    </div>
+                    
+                    <div class="image-info">
+                        <h4 id="image-filename">画像ファイル名</h4>
+                        <p id="image-details">ファイル情報</p>
+                    </div>
+                    
+                    <div class="image-navigation">
+                        <button id="prev-image" class="nav-button" aria-label="前の画像">
+                            <span>←</span>
+                            <span class="nav-text">前へ</span>
+                        </button>
+                        <span id="image-counter" class="image-counter">1 / 5</span>
+                        <button id="next-image" class="nav-button" aria-label="次の画像">
+                            <span class="nav-text">次へ</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>

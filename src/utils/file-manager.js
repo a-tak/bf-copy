@@ -427,6 +427,34 @@ async function resizeImageToThumbnail(imageInput) {
   }
 }
 
+async function getFullSizeImage(imagePath) {
+  const fs = require('fs-extra');
+  const sharp = require('sharp');
+  
+  try {
+    // ファイルが存在するかチェック
+    if (!await fs.pathExists(imagePath)) {
+      throw new Error(`画像ファイルが見つかりません: ${imagePath}`);
+    }
+    
+    // 画像を大きなサイズ（最大1200px幅）にリサイズ
+    const imageBuffer = await sharp(imagePath)
+      .resize(1200, null, {
+        fit: 'inside',
+        withoutEnlargement: true // 元画像より大きくしない
+      })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+    
+    // Base64形式に変換
+    const base64Data = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+    return base64Data;
+  } catch (error) {
+    console.error('フルサイズ画像取得エラー:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getCameraFolders,
   parseFolderDate,
@@ -437,4 +465,5 @@ module.exports = {
   checkForExistingFolders,
   getImageThumbnails,
   resizeImageToThumbnail,
+  getFullSizeImage,
 };
