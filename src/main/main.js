@@ -257,11 +257,16 @@ ipcMain.handle('detect-sigma-camera', async () => {
 // getDriveLabel関数はutilsモジュールに移動済み
 
 // TDD実装済みのファイル管理モジュールを使用
-const { getCameraFolders } = require('../utils/file-manager');
+const { getCameraFolders, getImageThumbnails } = require('../utils/file-manager');
 
 // カメラフォルダ一覧取得
 ipcMain.handle('get-camera-folders', async (event, cameraPath) => {
   return await getCameraFolders(cameraPath);
+});
+
+// フォルダサムネイル取得
+ipcMain.handle('get-folder-thumbnails', async (event, folderPath) => {
+  return await getImageThumbnails(folderPath);
 });
 
 // フォルダサイズとファイルサイズフォーマット関数はutilsモジュールに移動済み

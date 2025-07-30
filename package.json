@@ -23,17 +23,18 @@
   "author": "A-tak <hoge+git@a-tak.com>",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@types/jest": "^29.0.0",
+    "babel-jest": "^29.0.0",
     "electron": "^26.0.0",
     "electron-builder": "^24.6.0",
     "jest": "^29.0.0",
-    "jest-environment-node": "^29.0.0",
-    "@types/jest": "^29.0.0",
-    "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "babel-jest": "^29.0.0"
+    "jest-environment-node": "^29.0.0"
   },
   "dependencies": {
-    "fs-extra": "^11.1.1"
+    "fs-extra": "^11.1.1",
+    "sharp": "^0.34.3"
   },
   "build": {
     "appId": "com.atak.bf-copy",
@@ -54,11 +55,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico",

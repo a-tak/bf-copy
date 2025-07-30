@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // カメラフォルダ取得
   getCameraFolders: (cameraPath) => ipcRenderer.invoke('get-camera-folders', cameraPath),
   
+  // フォルダサムネイル取得
+  getFolderThumbnails: (folderPath) => ipcRenderer.invoke('get-folder-thumbnails', folderPath),
+  
   // ファイルコピー
   copyFiles: (sourceFolder, photoDestination, videoDestination, folderName) => 
     ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName),

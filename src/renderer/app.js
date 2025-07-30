@@ -203,17 +203,24 @@ class SigmaBFCopy {
         }
     }
 
-    displayFolderList(folders) {
+    async displayFolderList(folders) {
         const container = document.getElementById('camera-folders');
         container.innerHTML = '';
 
-        folders.forEach(folder => {
+        for (const folder of folders) {
             const folderElement = document.createElement('div');
             folderElement.className = 'folder-item';
+            
+            // サムネイル取得を試行
+            let thumbnailsHtml = '<div class="thumbnails-loading">📷 読み込み中...</div>';
+            
             folderElement.innerHTML = `
                 <div class="folder-info">
                     <h4>📁 ${folder.name}</h4>
                     <p>${folder.date} - ${folder.files} ファイル (${folder.size})</p>
+                </div>
+                <div class="folder-thumbnails">
+                    ${thumbnailsHtml}
                 </div>
                 <div class="folder-select">
                     <button>選択</button>
@@ -222,7 +229,29 @@ class SigmaBFCopy {
 
             folderElement.addEventListener('click', () => this.selectCameraFolder(folder, folderElement));
             container.appendChild(folderElement);
-        });
+            
+            // 非同期でサムネイルを読み込み
+            this.loadFolderThumbnails(folder.path, folderElement);
+        }
+    }
+
+    async loadFolderThumbnails(folderPath, folderElement) {
+        try {
+            const thumbnails = await window.electronAPI.getFolderThumbnails(folderPath);
+            const thumbnailContainer = folderElement.querySelector('.folder-thumbnails');
+            
+            if (thumbnails.length > 0) {
+                thumbnailContainer.innerHTML = thumbnails.map(thumbnail => 
+                    `<img src="${thumbnail.base64Data}" alt="${thumbnail.fileName}" class="thumbnail" title="${thumbnail.fileName}">`
+                ).join('');
+            } else {
+                thumbnailContainer.innerHTML = '<div class="no-thumbnails">📷 JPEG画像なし</div>';
+            }
+        } catch (error) {
+            console.error('サムネイル読み込みエラー:', error);
+            const thumbnailContainer = folderElement.querySelector('.folder-thumbnails');
+            thumbnailContainer.innerHTML = '<div class="thumbnails-error">📷 読み込み失敗</div>';
+        }
     }
 
     selectCameraFolder(folder, element) {

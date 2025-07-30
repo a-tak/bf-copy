@@ -321,6 +321,90 @@ async function checkForExistingFolders(photoDestPath, videoDestPath, sourceFolde
   }
 }
 
+async function getImageThumbnails(folderPath) {
+  const fs = require('fs-extra');
+  const path = require('path');
+  const sharp = require('sharp');
+  
+  try {
+    // フォルダが存在するかチェック
+    if (!await fs.pathExists(folderPath)) {
+      return [];
+    }
+    
+    // フォルダ内のファイル一覧を取得
+    const files = await fs.readdir(folderPath);
+    
+    // JPEGファイルのみを抽出
+    const jpegFiles = files.filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      return ['.jpg', '.jpeg'].includes(ext);
+    });
+    
+    // 最大5ファイルまで制限
+    const selectedFiles = jpegFiles.slice(0, 5);
+    
+    // 各画像ファイルのサムネイルを生成
+    const thumbnails = [];
+    for (const fileName of selectedFiles) {
+      try {
+        const filePath = path.join(folderPath, fileName);
+        const thumbnailData = await resizeImageToThumbnail(filePath);
+        
+        thumbnails.push({
+          fileName: fileName,
+          filePath: filePath,
+          base64Data: thumbnailData
+        });
+      } catch (error) {
+        console.error(`サムネイル生成エラー: ${fileName}`, error);
+        // エラーが発生した画像はスキップして続行
+      }
+    }
+    
+    return thumbnails;
+  } catch (error) {
+    console.error('フォルダ内画像取得エラー:', error);
+    return [];
+  }
+}
+
+async function resizeImageToThumbnail(imageInput) {
+  const sharp = require('sharp');
+  
+  try {
+    let imageBuffer;
+    
+    // 入力がファイルパス（文字列）の場合とBufferの場合を処理
+    if (typeof imageInput === 'string') {
+      // ファイルパスの場合、ファイルを読み込み
+      imageBuffer = await sharp(imageInput)
+        .resize(150, 100, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+    } else {
+      // Bufferの場合、そのまま処理
+      imageBuffer = await sharp(imageInput)
+        .resize(150, 100, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+    }
+    
+    // Base64形式に変換
+    const base64Data = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+    return base64Data;
+  } catch (error) {
+    console.error('画像リサイズエラー:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getCameraFolders,
   parseFolderDate,
@@ -329,4 +413,6 @@ module.exports = {
   classifyFileType,
   generateDestinationPath,
   checkForExistingFolders,
+  getImageThumbnails,
+  resizeImageToThumbnail,
 };
