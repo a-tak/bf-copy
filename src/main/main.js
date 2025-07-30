@@ -25,8 +25,8 @@ if (!gotTheLock) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 800,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -74,6 +74,17 @@ function startCameraMonitoring() {
       // カメラが新しく検知された場合
       if (currentCamera && !lastDetectedCamera) {
         console.log('BFカメラが新しく接続されました:', currentCamera);
+        
+        // カメラ検知時にキャッシュクリーンアップを実行
+        try {
+          const { cleanupOrphanedCache } = require('../utils/thumbnail-cache');
+          const cleanupResult = await cleanupOrphanedCache();
+          if (cleanupResult.deletedCount > 0) {
+            console.log(`孤立キャッシュを削除しました: ${cleanupResult.deletedCount}個`);
+          }
+        } catch (error) {
+          console.error('カメラ検知時のキャッシュクリーンアップエラー:', error);
+        }
         
         // ウィンドウをアクティブ化
         activateMainWindow();
@@ -186,9 +197,18 @@ function createTray() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
   createTray();
+  
+  // キャッシュシステムの初期化とクリーンアップ
+  try {
+    const { performMaintenanceCleanup } = require('../utils/thumbnail-cache');
+    await performMaintenanceCleanup();
+    console.log('サムネイルキャッシュのクリーンアップが完了しました');
+  } catch (error) {
+    console.error('キャッシュクリーンアップエラー:', error);
+  }
   
   // カメラ監視を開始
   startCameraMonitoring();
@@ -257,11 +277,22 @@ ipcMain.handle('detect-sigma-camera', async () => {
 // getDriveLabel関数はutilsモジュールに移動済み
 
 // TDD実装済みのファイル管理モジュールを使用
-const { getCameraFolders } = require('../utils/file-manager');
+const { getCameraFolders, getImageThumbnails } = require('../utils/file-manager');
 
 // カメラフォルダ一覧取得
 ipcMain.handle('get-camera-folders', async (event, cameraPath) => {
   return await getCameraFolders(cameraPath);
+});
+
+// フォルダサムネイル取得
+ipcMain.handle('get-folder-thumbnails', async (event, folderPath) => {
+  return await getImageThumbnails(folderPath);
+});
+
+// フルサイズ画像取得
+ipcMain.handle('get-full-size-image', async (event, imagePath) => {
+  const { getFullSizeImage } = require('../utils/file-manager');
+  return await getFullSizeImage(imagePath);
 });
 
 // フォルダサイズとファイルサイズフォーマット関数はutilsモジュールに移動済み

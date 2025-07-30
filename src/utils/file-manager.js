@@ -321,6 +321,140 @@ async function checkForExistingFolders(photoDestPath, videoDestPath, sourceFolde
   }
 }
 
+async function getImageThumbnails(folderPath) {
+  const fs = require('fs-extra');
+  const path = require('path');
+  const { getCachedThumbnail, setCachedThumbnail, initializeThumbnailCache } = require('./thumbnail-cache');
+  
+  try {
+    // キャッシュシステムを初期化
+    await initializeThumbnailCache();
+    
+    // フォルダが存在するかチェック
+    if (!await fs.pathExists(folderPath)) {
+      return [];
+    }
+    
+    // フォルダ内のファイル一覧を取得
+    const files = await fs.readdir(folderPath);
+    
+    // JPEGファイルのみを抽出
+    const jpegFiles = files.filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      return ['.jpg', '.jpeg'].includes(ext);
+    });
+    
+    // 最大5ファイルまで制限
+    const selectedFiles = jpegFiles.slice(0, 5);
+    
+    // 並列処理でサムネイルを取得または生成
+    const thumbnailPromises = selectedFiles.map(async (fileName) => {
+      try {
+        const filePath = path.join(folderPath, fileName);
+        
+        // キャッシュから取得を試行
+        let thumbnailData = await getCachedThumbnail(filePath);
+        
+        if (!thumbnailData) {
+          // キャッシュにない場合は新規生成
+          console.log(`サムネイル生成中: ${fileName}`);
+          thumbnailData = await resizeImageToThumbnail(filePath);
+          
+          // 生成したサムネイルをキャッシュに保存
+          await setCachedThumbnail(filePath, thumbnailData);
+          console.log(`サムネイルキャッシュ保存: ${fileName}`);
+        } else {
+          console.log(`サムネイルキャッシュヒット: ${fileName}`);
+        }
+        
+        return {
+          fileName: fileName,
+          filePath: filePath,
+          base64Data: thumbnailData
+        };
+      } catch (error) {
+        console.error(`サムネイル処理エラー: ${fileName}`, error);
+        return null;
+      }
+    });
+    
+    // 全ての並列処理の完了を待機
+    const results = await Promise.all(thumbnailPromises);
+    
+    // nullを除外して有効なサムネイルのみを返す
+    const thumbnails = results.filter(result => result !== null);
+    
+    return thumbnails;
+  } catch (error) {
+    console.error('フォルダ内画像取得エラー:', error);
+    return [];
+  }
+}
+
+async function resizeImageToThumbnail(imageInput) {
+  const sharp = require('sharp');
+  
+  try {
+    let imageBuffer;
+    
+    // 入力がファイルパス（文字列）の場合とBufferの場合を処理
+    if (typeof imageInput === 'string') {
+      // ファイルパスの場合、ファイルを読み込み
+      imageBuffer = await sharp(imageInput)
+        .resize(150, 100, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+    } else {
+      // Bufferの場合、そのまま処理
+      imageBuffer = await sharp(imageInput)
+        .resize(150, 100, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+    }
+    
+    // Base64形式に変換
+    const base64Data = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+    return base64Data;
+  } catch (error) {
+    console.error('画像リサイズエラー:', error);
+    throw error;
+  }
+}
+
+async function getFullSizeImage(imagePath) {
+  const fs = require('fs-extra');
+  const sharp = require('sharp');
+  
+  try {
+    // ファイルが存在するかチェック
+    if (!await fs.pathExists(imagePath)) {
+      throw new Error(`画像ファイルが見つかりません: ${imagePath}`);
+    }
+    
+    // 画像を大きなサイズ（最大1200px幅）にリサイズ
+    const imageBuffer = await sharp(imagePath)
+      .resize(1200, null, {
+        fit: 'inside',
+        withoutEnlargement: true // 元画像より大きくしない
+      })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+    
+    // Base64形式に変換
+    const base64Data = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+    return base64Data;
+  } catch (error) {
+    console.error('フルサイズ画像取得エラー:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getCameraFolders,
   parseFolderDate,
@@ -329,4 +463,7 @@ module.exports = {
   classifyFileType,
   generateDestinationPath,
   checkForExistingFolders,
+  getImageThumbnails,
+  resizeImageToThumbnail,
+  getFullSizeImage,
 };
