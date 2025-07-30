@@ -18,6 +18,9 @@ BFカメラから写真・動画をWindows/macOSに自動コピーするElectron
 
 ### インストール
 
+https://github.com/a-tak/bf-copy/releases
+
+### ビルド
 ```bash
 # 依存関係インストール
 npm install
