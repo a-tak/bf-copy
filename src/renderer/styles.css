@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -436,50 +436,6 @@ button.primary:hover {
     text-align: center;
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .image-modal-content {
-        gap: 10px;
-        max-height: 98vh;
-    }
-    
-    .image-container {
-        max-width: 98vw;
-        max-height: 75vh;
-    }
-    
-    .image-info {
-        padding: 8px 12px;
-        max-width: 98vw;
-    }
-    
-    .image-info h4 {
-        font-size: 1rem;
-    }
-    
-    .image-info p {
-        font-size: 0.8rem;
-    }
-    
-    .image-navigation {
-        gap: 15px;
-        padding: 8px 15px;
-    }
-    
-    .nav-button {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-    
-    .nav-text {
-        display: none;
-    }
-    
-    .image-counter {
-        font-size: 12px;
-        min-width: 50px;
-    }
-}
 
 /* 進行状況バー */
 .progress-bar {
@@ -664,22 +620,156 @@ button.primary:hover {
     text-align: center;
 }
 
-/* レスポンシブ */
-@media (max-width: 600px) {
-    .container {
-        padding: 15px;
-    }
-    
-    .modal-content {
-        min-width: auto;
-        padding: 20px;
-    }
-    
-    .folder-input {
-        flex-direction: column;
-    }
-    
-    .copy-actions {
-        flex-direction: column;
-    }
+
+/* 2カラムレイアウト */
+#two-column-layout {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 20px;
+    min-height: 700px;
 }
+
+/* 左側サイドバー（フォルダリスト） */
+#folder-sidebar {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#folder-sidebar h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #2d3748;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#folder-sidebar .folder-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 600px;
+    padding-right: 10px;
+}
+
+/* フォルダリストのコンパクト表示 */
+.folder-list .folder-item {
+    display: block;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.folder-list .folder-item:hover {
+    background: rgba(247, 250, 252, 0.9);
+    border-color: #e53e3e;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.folder-list .folder-item.selected {
+    background: rgba(229, 62, 62, 0.1);
+    border-color: #e53e3e;
+    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+}
+
+.folder-list .folder-info h4 {
+    font-size: 14px;
+    margin-bottom: 3px;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.folder-list .folder-info p {
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 8px;
+}
+
+.folder-list .folder-thumbnails {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    min-height: auto;
+}
+
+.folder-list .thumbnail {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.folder-list .thumbnail:hover {
+    transform: scale(1.2);
+    z-index: 10;
+    position: relative;
+}
+
+/* 右側メインエリア */
+#main-area {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* フォルダ未選択時のプレースホルダー */
+.placeholder-message {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: #718096;
+}
+
+.placeholder-message h3 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: #4a5568;
+}
+
+.placeholder-message p {
+    font-size: 1rem;
+}
+
+/* メインエリア内のセクション調整 */
+#main-area section {
+    margin-bottom: 0;
+}
+
+/* スクロールバーのスタイリング */
+#folder-sidebar .folder-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#folder-sidebar .folder-list::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 3px;
+}
+
+#folder-sidebar .folder-list::-webkit-scrollbar-thumb {
+    background: rgba(229, 62, 62, 0.5);
+    border-radius: 3px;
+}
+
+#folder-sidebar .folder-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 62, 62, 0.7);
+}
+
