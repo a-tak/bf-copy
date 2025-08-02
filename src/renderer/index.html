@@ -60,46 +60,58 @@
                 </div>
             </section>
 
-            <!-- フォルダ選択 -->
-            <section id="folder-selection" class="hidden">
-                <h3>📁 コピーするフォルダを選択</h3>
-                <div id="camera-folders" class="folder-list">
-                    <!-- 動的に生成されるフォルダリスト -->
-                </div>
-            </section>
-
-            <!-- コピー設定 -->
-            <section id="copy-settings" class="hidden">
-                <h3>⚙️ コピー設定</h3>
-                
-                <div class="setting-group">
-                    <label>フォルダ名:</label>
-                    <input type="text" id="folder-name" placeholder="例: 撮影セッション">
-                </div>
-                
-                <div class="setting-group">
-                    <label>現在の設定:</label>
-                    <div class="current-settings">
-                        <div>📸 写真: <span id="current-photo-dest"></span></div>
-                        <div>🎥 動画: <span id="current-video-dest"></span></div>
+            <!-- 2カラムレイアウト -->
+            <div id="two-column-layout" class="hidden">
+                <!-- 左側: フォルダ選択サイドバー -->
+                <aside id="folder-sidebar">
+                    <h3>📁 フォルダ選択</h3>
+                    <div id="camera-folders" class="folder-list">
+                        <!-- 動的に生成されるフォルダリスト -->
                     </div>
-                    <button id="change-settings">設定変更</button>
-                </div>
-                
-                <div class="copy-actions">
-                    <button id="start-copy" class="primary">📋 コピー開始</button>
-                </div>
-            </section>
+                </aside>
 
-            <!-- 進行状況 -->
-            <section id="progress-section" class="hidden">
-                <h3>📊 コピー進行状況</h3>
-                <div class="progress-bar">
-                    <div id="progress-fill"></div>
-                </div>
-                <div id="progress-text">0%</div>
-                <div id="progress-details"></div>
-            </section>
+                <!-- 右側: メインエリア（コピー設定・進捗） -->
+                <main id="main-area">
+                    <!-- フォルダ未選択時のメッセージ -->
+                    <div id="no-folder-selected" class="placeholder-message">
+                        <h3>📁 フォルダを選択してください</h3>
+                        <p>左側からコピーするフォルダを選択してください</p>
+                    </div>
+
+                    <!-- コピー設定 -->
+                    <section id="copy-settings" class="hidden">
+                        <h3>⚙️ コピー設定</h3>
+                        
+                        <div class="setting-group">
+                            <label>フォルダ名:</label>
+                            <input type="text" id="folder-name" placeholder="例: 撮影セッション">
+                        </div>
+                        
+                        <div class="setting-group">
+                            <label>現在の設定:</label>
+                            <div class="current-settings">
+                                <div>📸 写真: <span id="current-photo-dest"></span></div>
+                                <div>🎥 動画: <span id="current-video-dest"></span></div>
+                            </div>
+                            <button id="change-settings">設定変更</button>
+                        </div>
+                        
+                        <div class="copy-actions">
+                            <button id="start-copy" class="primary">📋 コピー開始</button>
+                        </div>
+                    </section>
+
+                    <!-- 進行状況 -->
+                    <section id="progress-section" class="hidden">
+                        <h3>📊 コピー進行状況</h3>
+                        <div class="progress-bar">
+                            <div id="progress-fill"></div>
+                        </div>
+                        <div id="progress-text">0%</div>
+                        <div id="progress-details"></div>
+                    </section>
+                </main>
+            </div>
         </main>
 
         <!-- 設定画面 -->

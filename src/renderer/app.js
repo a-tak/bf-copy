@@ -165,7 +165,7 @@ class SigmaBFCopy {
     showCameraNotDetected() {
         document.getElementById('camera-not-detected').classList.remove('hidden');
         document.getElementById('camera-detected').classList.add('hidden');
-        document.getElementById('folder-selection').classList.add('hidden');
+        document.getElementById('two-column-layout').classList.add('hidden');
         document.getElementById('copy-settings').classList.add('hidden');
     }
 
@@ -192,11 +192,11 @@ class SigmaBFCopy {
             if (folders.length > 0) {
                 console.log('カメラフォルダ一覧:', folders);
                 this.displayFolderList(folders);
-                document.getElementById('folder-selection').classList.remove('hidden');
+                document.getElementById('two-column-layout').classList.remove('hidden');
             } else {
                 console.log('カメラにフォルダが見つかりませんでした');
                 // フォルダが見つからない場合の処理
-                document.getElementById('folder-selection').classList.add('hidden');
+                document.getElementById('two-column-layout').classList.add('hidden');
             }
         } catch (error) {
             console.error('カメラフォルダ読み込みエラー:', error);
@@ -221,9 +221,6 @@ class SigmaBFCopy {
                 </div>
                 <div class="folder-thumbnails">
                     ${thumbnailsHtml}
-                </div>
-                <div class="folder-select">
-                    <button>選択</button>
                 </div>
             `;
 
@@ -272,7 +269,8 @@ class SigmaBFCopy {
         element.classList.add('selected');
         this.selectedFolder = folder;
 
-        // コピー設定セクションを表示
+        // プレースホルダーを非表示にしてコピー設定セクションを表示
+        document.getElementById('no-folder-selected').classList.add('hidden');
         document.getElementById('copy-settings').classList.remove('hidden');
         
         console.log('選択されたフォルダ:', folder);
