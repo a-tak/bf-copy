@@ -8,6 +8,7 @@ class SigmaBFCopy {
 
     async init() {
         await this.loadConfig();
+        await this.initVersionDisplay();
         this.setupEventListeners();
         this.setupCopyProgressListener();
         this.setupTrayListeners();
@@ -60,6 +61,18 @@ class SigmaBFCopy {
     async loadConfig() {
         this.config = await window.electronAPI.loadConfig();
         console.log('設定読み込み:', this.config);
+    }
+
+    async initVersionDisplay() {
+        try {
+            const version = await window.electronAPI.getAppVersion();
+            const versionElement = document.getElementById('app-version');
+            if (versionElement) {
+                versionElement.textContent = `v${version}`;
+            }
+        } catch (error) {
+            console.error('バージョン取得エラー:', error);
+        }
     }
 
     async saveConfig() {

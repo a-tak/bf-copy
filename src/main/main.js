@@ -326,3 +326,10 @@ ipcMain.handle('set-auto-start', (event, enabled) => {
   console.log('自動起動設定結果:', result);
   return result;
 });
+
+// バージョン取得
+const { getAppVersion } = require('../utils/version-manager');
+
+ipcMain.handle('get-app-version', () => {
+  return getAppVersion();
+});
