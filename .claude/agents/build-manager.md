@@ -38,10 +38,10 @@ powershell -Command "Get-Process | Where-Object {$_.ProcessName -like '*bf*'} | 
 #### ステップ3: クリーンアップ
 ```cmd
 :: ビルドファイルのクリーンアップ
-rmdir /s /q dist 2>nul
+if exist dist rmdir /s /q dist
 
 :: ファイルロック解除のため少し待機
-timeout /t 3 /nobreak >nul
+timeout /t 3 /nobreak
 ```
 
 #### ステップ4: ビルド実行
@@ -70,11 +70,16 @@ for %i in ("dist\win-unpacked\BF Copy.exe") do echo %~zi bytes
    - BF CopyまたはElectronプロセスを強制終了
 2. **システム再起動後に実行**
 
+**Windows環境特有の注意点**:
+- **出力リダイレクト**: `> nul` や `2>nul` 使用時に不要な`nul`ファイルが作成される場合がある
+- **ファイルクリーンアップ**: ビルド後にプロジェクトルートの`nul`ファイルを確認し、存在すれば削除
+- **コマンド形式**: Windows環境では`cmd`コマンドを優先的に使用
+
 **ビルドが失敗する場合**:
 ```cmd
 :: npm依存関係の再インストール
-rmdir /s /q node_modules
-del package-lock.json
+if exist node_modules rmdir /s /q node_modules
+if exist package-lock.json del package-lock.json
 npm install
 
 :: npmキャッシュクリア
@@ -172,8 +177,8 @@ taskkill /F /IM "BF Copy.exe" 2>nul
 taskkill /F /IM "electron.exe" 2>nul
 
 :: クリーンアップ
-rmdir /s /q dist 2>nul
-timeout /t 3 /nobreak >nul
+if exist dist rmdir /s /q dist
+timeout /t 3 /nobreak
 
 :: ビルド実行
 npm run pack
@@ -221,7 +226,7 @@ if exist "dist\win-unpacked\BF Copy.exe" (
 npm version patch --no-git-tag-version
 
 :: 2. プロセス終了・クリーンアップ・ビルド
-taskkill /F /IM "BF Copy.exe" 2>nul && taskkill /F /IM "electron.exe" 2>nul && rmdir /s /q dist 2>nul && timeout /t 3 /nobreak >nul && npm run pack
+taskkill /F /IM "BF Copy.exe" 2>nul && taskkill /F /IM "electron.exe" 2>nul && if exist dist rmdir /s /q dist && timeout /t 3 /nobreak && npm run pack
 ```
 
 ### トラブル時の対処法
@@ -231,8 +236,8 @@ taskkill /F /IM "BF Copy.exe" 2>nul && taskkill /F /IM "electron.exe" 2>nul && r
 
 **Case 2: ビルドエラーが発生**
 ```cmd
-rmdir /s /q node_modules
-del package-lock.json
+if exist node_modules rmdir /s /q node_modules
+if exist package-lock.json del package-lock.json
 npm install
 npm run pack
 ```
