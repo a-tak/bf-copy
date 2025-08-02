@@ -33,5 +33,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setAutoStart: (enabled) => ipcRenderer.invoke('set-auto-start', enabled),
   
   // カメラ接続イベント
-  onCameraConnected: (callback) => ipcRenderer.on('camera-connected', callback)
+  onCameraConnected: (callback) => ipcRenderer.on('camera-connected', callback),
+  
+  // バージョン取得
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 });

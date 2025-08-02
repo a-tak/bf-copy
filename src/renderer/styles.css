@@ -44,6 +44,17 @@ header h1 {
     -webkit-text-fill-color: transparent;
 }
 
+.version-display {
+    font-size: 0.4em;
+    font-weight: 300;
+    opacity: 0.7;
+    vertical-align: top;
+    margin-left: 8px;
+    color: #cccccc;
+    -webkit-text-fill-color: #cccccc;
+    text-shadow: none;
+}
+
 header p {
     font-size: 1.2rem;
     opacity: 0.85;
