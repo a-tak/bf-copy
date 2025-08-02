@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -436,50 +436,6 @@ button.primary:hover {
     text-align: center;
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .image-modal-content {
-        gap: 10px;
-        max-height: 98vh;
-    }
-    
-    .image-container {
-        max-width: 98vw;
-        max-height: 75vh;
-    }
-    
-    .image-info {
-        padding: 8px 12px;
-        max-width: 98vw;
-    }
-    
-    .image-info h4 {
-        font-size: 1rem;
-    }
-    
-    .image-info p {
-        font-size: 0.8rem;
-    }
-    
-    .image-navigation {
-        gap: 15px;
-        padding: 8px 15px;
-    }
-    
-    .nav-button {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-    
-    .nav-text {
-        display: none;
-    }
-    
-    .image-counter {
-        font-size: 12px;
-        min-width: 50px;
-    }
-}
 
 /* 進行状況バー */
 .progress-bar {
@@ -664,32 +620,13 @@ button.primary:hover {
     text-align: center;
 }
 
-/* レスポンシブ */
-@media (max-width: 600px) {
-    .container {
-        padding: 15px;
-    }
-    
-    .modal-content {
-        min-width: auto;
-        padding: 20px;
-    }
-    
-    .folder-input {
-        flex-direction: column;
-    }
-    
-    .copy-actions {
-        flex-direction: column;
-    }
-}
 
 /* 2カラムレイアウト */
 #two-column-layout {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 450px 1fr;
     gap: 20px;
-    min-height: 500px;
+    min-height: 700px;
 }
 
 /* 左側サイドバー（フォルダリスト） */
@@ -717,7 +654,7 @@ button.primary:hover {
 #folder-sidebar .folder-list {
     flex: 1;
     overflow-y: auto;
-    max-height: 400px;
+    max-height: 600px;
     padding-right: 10px;
 }
 
@@ -761,7 +698,7 @@ button.primary:hover {
 
 .folder-list .folder-thumbnails {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: wrap;
     padding: 0;
     background: none;
@@ -770,10 +707,10 @@ button.primary:hover {
 }
 
 .folder-list .thumbnail {
-    width: 30px;
-    height: 20px;
+    width: 60px;
+    height: 40px;
     object-fit: cover;
-    border-radius: 2px;
+    border-radius: 4px;
     border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
@@ -836,18 +773,3 @@ button.primary:hover {
     background: rgba(229, 62, 62, 0.7);
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    #two-column-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-    }
-    
-    #folder-sidebar {
-        max-height: 200px;
-    }
-    
-    #folder-sidebar .folder-list {
-        max-height: 120px;
-    }
-}
