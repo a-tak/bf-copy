@@ -90,7 +90,7 @@ function parseFolderDate(folderName) {
     return `${year}-${month}-${day}`;
   }
   
-  return folderName; // 日付形式でない場合はそのまま返す
+  return null; // 日付形式でない場合はnullを返す
 }
 
 function formatFileSize(bytes) {
@@ -114,9 +114,13 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       folderName
     });
 
-    // コピー先フォルダパスを生成
-    const photoDestPath = generateDestinationPath(photoDestination, folderName);
-    const videoDestPath = generateDestinationPath(videoDestination, folderName);
+    // ソースフォルダ名から日付を抽出
+    const sourceFolderName = path.basename(sourceFolderPath);
+    const sourceDate = parseFolderDate(sourceFolderName);
+    
+    // コピー先フォルダパスを生成（元フォルダの日付を使用）
+    const photoDestPath = generateDestinationPath(photoDestination, folderName, sourceDate);
+    const videoDestPath = generateDestinationPath(videoDestination, folderName, sourceDate);
 
     // 上書禁止: 既存フォルダの存在チェック
     const overwriteCheck = await checkForExistingFolders(photoDestPath, videoDestPath, sourceFolderPath);
@@ -252,12 +256,12 @@ function classifyFileType(fileName) {
   }
 }
 
-function generateDestinationPath(destination, folderName) {
+function generateDestinationPath(destination, folderName, sourceDate) {
   // テストで要求されたコピー先パス生成機能を実装
-  // "YYYY-MM-DD_フォルダ名/BF" 形式でフォルダパスを生成
+  // sourceDateが指定されている場合はそれを使用、されていない場合は今日の日付を使用
   const path = require('path');
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const destFolderName = `${today}_${folderName}`;
+  const dateToUse = sourceDate || new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const destFolderName = `${dateToUse}_${folderName}`;
   return path.join(destination, destFolderName, 'BF');
 }
 

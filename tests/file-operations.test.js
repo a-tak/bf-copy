@@ -41,7 +41,7 @@ describe('ファイル操作機能', () => {
       const testCases = [
         { input: '241201_1', expected: '2024-12-01' },
         { input: '250101_2', expected: '2025-01-01' },
-        { input: 'other_folder', expected: 'other_folder' },
+        { input: 'other_folder', expected: null },
       ];
       
       testCases.forEach(({ input, expected }) => {
@@ -79,27 +79,43 @@ describe('ファイル操作機能', () => {
       // 4. 進行状況を報告
       
       const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
       
-      const sourceFolder = '/mock/source';
-      const photoDestination = '/mock/photos';
-      const videoDestination = '/mock/videos';
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-test-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
       const folderName = 'test-folder';
       
-      const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
-      
-      // 期待される結果
-      expect(result).toHaveProperty('success');
-      expect(result).toHaveProperty('totalFiles');
-      expect(result).toHaveProperty('copiedPhotos');
-      expect(result).toHaveProperty('copiedVideos');
-      expect(result).toHaveProperty('errors');
-      expect(result).toHaveProperty('photoDestPath');
-      expect(result).toHaveProperty('videoDestPath');
-      
-      expect(typeof result.totalFiles).toBe('number');
-      expect(typeof result.copiedPhotos).toBe('number');
-      expect(typeof result.copiedVideos).toBe('number');
-      expect(Array.isArray(result.errors)).toBe(true);
+      try {
+        // ソースフォルダに写真と動画ファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'test.jpg'), 'test photo content');
+        await fs.writeFile(path.join(sourceFolder, 'test.mp4'), 'test video content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
+        
+        // 期待される結果
+        expect(result).toHaveProperty('success');
+        expect(result).toHaveProperty('totalFiles');
+        expect(result).toHaveProperty('copiedPhotos');
+        expect(result).toHaveProperty('copiedVideos');
+        expect(result).toHaveProperty('errors');
+        expect(result).toHaveProperty('photoDestPath');
+        expect(result).toHaveProperty('videoDestPath');
+        
+        expect(typeof result.totalFiles).toBe('number');
+        expect(typeof result.copiedPhotos).toBe('number');
+        expect(typeof result.copiedVideos).toBe('number');
+        expect(Array.isArray(result.errors)).toBe(true);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
     });
 
     test('ファイル拡張子による分類が正しく動作する', async () => {
@@ -143,7 +159,29 @@ describe('ファイル操作機能', () => {
       expect(result).toContain(today);
       expect(result).toContain(folderName);
       expect(result).toContain('BF');
-      expect(result).toMatch(/\/\d{4}-\d{2}-\d{2}_test-folder\/BF$/);
+      // 日付パターンとフォルダ名が含まれていることを確認（パス区切り文字に依存しない）
+      expect(result).toMatch(/\d{4}-\d{2}-\d{2}_test-folder/);
+    });
+
+    test('元フォルダの日付を使用してコピー先フォルダ名を生成する', async () => {
+      // 期待される動作:
+      // カメラフォルダの日付（250518_0 → 2025-05-18）を使用して
+      // "2025-05-18_フォルダ名/BF" 形式でフォルダを作成
+      
+      const { generateDestinationPath } = require('../src/utils/file-manager');
+      const path = require('path');
+      
+      const destination = '/mock/destination';
+      const folderName = 'test-folder';
+      const sourceDate = '2025-05-18'; // 元フォルダから抽出された日付
+      
+      const result = generateDestinationPath(destination, folderName, sourceDate);
+      const expected = path.join(destination, '2025-05-18_test-folder', 'BF');
+      
+      expect(result).toBe(expected);
+      expect(result).toContain(sourceDate);
+      expect(result).toContain(folderName);
+      expect(result).toContain('BF');
     });
 
     test('対象ファイルがない場合はフォルダを作成しない', async () => {
@@ -252,6 +290,52 @@ describe('ファイル操作機能', () => {
         // 動画フォルダのみ作成され、写真フォルダは作成されていないことを確認
         expect(await fs.pathExists(result.photoDestPath)).toBe(false);
         expect(await fs.pathExists(result.videoDestPath)).toBe(true);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('カメラフォルダの日付を使用してコピー先フォルダを作成する', async () => {
+      // 期待される動作:
+      // 1. ソースフォルダのパス末尾から「250518_0」のようなフォルダ名を取得
+      // 2. parseFolderDateで「2025-05-18」に変換
+      // 3. コピー先フォルダ名を「2025-05-18_ユーザー入力名」で作成
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-test-'));
+      const cameraRootPath = path.join(testDir, 'camera');
+      const sourceFolder = path.join(cameraRootPath, 'DCIM', '250518_0'); // カメラフォルダの形式
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      const folderName = 'camera-test';
+      
+      try {
+        // ソースフォルダに写真ファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'test.jpg'), 'test photo content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
+        
+        // 期待される結果
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(1);
+        expect(result.copiedPhotos).toBe(1);
+        expect(result.copiedVideos).toBe(0);
+        
+        // コピー先フォルダが元のカメラフォルダの日付を使用していることを確認
+        expect(result.photoDestPath).toContain('2025-05-18_camera-test');
+        expect(result.photoDestPath).not.toContain(new Date().toISOString().slice(0, 10)); // 今日の日付は使用されない
+        
+        // フォルダが正しく作成されていることを確認
+        expect(await fs.pathExists(result.photoDestPath)).toBe(true);
+        expect(await fs.pathExists(result.videoDestPath)).toBe(false);
         
       } finally {
         // テスト用フォルダをクリーンアップ
