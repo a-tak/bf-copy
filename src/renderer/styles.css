@@ -613,7 +613,8 @@ button.primary:hover {
     display: grid;
     grid-template-columns: 450px 1fr;
     gap: 20px;
-    min-height: 600px;
+    height: calc(100vh - 320px);
+    min-height: 350px;
 }
 
 /* 左側サイドバー（フォルダリスト） */
@@ -627,6 +628,7 @@ button.primary:hover {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 #folder-sidebar h3 {
@@ -641,8 +643,8 @@ button.primary:hover {
 #folder-sidebar .folder-list {
     flex: 1;
     overflow-y: auto;
-    max-height: 500px;
     padding-right: 10px;
+    min-height: 0;
 }
 
 /* フォルダリストのコンパクト表示 */
