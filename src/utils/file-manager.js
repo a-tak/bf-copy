@@ -122,67 +122,48 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     const photoDestPath = generateDestinationPath(photoDestination, folderName, sourceDate);
     const videoDestPath = generateDestinationPath(videoDestination, folderName, sourceDate);
 
-    // 上書禁止: 既存フォルダの存在チェック
-    const overwriteCheck = await checkForExistingFolders(photoDestPath, videoDestPath, sourceFolderPath);
-    if (overwriteCheck.hasConflict) {
-      return {
-        success: false,
-        message: `フォルダが既に存在します: ${overwriteCheck.conflictPath}`,
-        overwritePrevented: true,
-        conflictPath: overwriteCheck.conflictPath,
-        photoDestPath,
-        videoDestPath
-      };
-    }
-
-    // ソースフォルダからファイル一覧を取得
-    const sourceFiles = await fs.readdir(sourceFolderPath);
+    // 差分コピー機能: 既存ファイルとコピー対象ファイルを判定
+    const fileCheck = await checkForExistingFiles(photoDestPath, videoDestPath, sourceFolderPath);
     
     const copyResults = {
       success: true,
-      totalFiles: 0,
+      totalFiles: fileCheck.filesToCopy.length + fileCheck.skippedFiles.length,
       copiedPhotos: 0,
       copiedVideos: 0,
+      skippedPhotos: 0,
+      skippedVideos: 0,
       errors: [],
       photoDestPath,
-      videoDestPath
+      videoDestPath,
+      alreadyExists: fileCheck.hasExistingFolders
     };
 
-    // 先にファイルを分類して、必要なフォルダのみ作成する
-    const filesToCopy = [];
-    let hasPhotos = false;
-    let hasVideos = false;
-
-    for (const fileName of sourceFiles) {
-      const sourceFilePath = path.join(sourceFolderPath, fileName);
-      const stats = await fs.stat(sourceFilePath);
-      
-      if (!stats.isFile()) continue;
-
-      copyResults.totalFiles++;
-      
-      // ファイル拡張子で写真/動画を判定
-      const fileType = classifyFileType(fileName);
-      filesToCopy.push({ fileName, sourceFilePath, fileType });
-      
-      if (fileType === 'photo') {
-        hasPhotos = true;
-      } else if (fileType === 'video') {
-        hasVideos = true;
+    // スキップされたファイルの統計を集計
+    for (const skippedFile of fileCheck.skippedFiles) {
+      if (skippedFile.fileType === 'photo') {
+        copyResults.skippedPhotos++;
+      } else if (skippedFile.fileType === 'video') {
+        copyResults.skippedVideos++;
       }
     }
 
-    // 対象ファイルがある場合のみ、コピー先フォルダを作成
-    if (hasPhotos) {
+    // コピー対象ファイルがない場合は早期リターン
+    if (fileCheck.filesToCopy.length === 0) {
+      console.log('コピー対象ファイルがありません。既存ファイルのみです。');
+      return copyResults;
+    }
+
+    // 必要なフォルダのみ作成
+    if (fileCheck.needsPhotoFolder && !fileCheck.photoFolderExists) {
       await fs.ensureDir(photoDestPath);
     }
-    if (hasVideos) {
+    if (fileCheck.needsVideoFolder && !fileCheck.videoFolderExists) {
       await fs.ensureDir(videoDestPath);
     }
 
     // ファイルをコピー
     let copiedCount = 0;
-    for (const { fileName, sourceFilePath, fileType } of filesToCopy) {
+    for (const { fileName, sourceFilePath, fileType } of fileCheck.filesToCopy) {
       let destPath;
       
       if (fileType === 'photo') {
@@ -210,13 +191,13 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
         if (progressCallback) {
           progressCallback({
             current: copiedCount,
-            total: copyResults.totalFiles,
+            total: fileCheck.filesToCopy.length,
             fileName: fileName,
-            percentage: Math.round((copiedCount / copyResults.totalFiles) * 100)
+            percentage: Math.round((copiedCount / fileCheck.filesToCopy.length) * 100)
           });
         }
         
-        console.log(`コピー完了: ${fileName} -> ${fileType} (${copiedCount}/${copyResults.totalFiles})`);
+        console.log(`コピー完了: ${fileName} -> ${fileType} (${copiedCount}/${fileCheck.filesToCopy.length})`);
         
       } catch (error) {
         console.error(`ファイルコピーエラー: ${fileName}`, error);
@@ -320,6 +301,98 @@ async function checkForExistingFolders(photoDestPath, videoDestPath, sourceFolde
     return {
       hasConflict: true,
       conflictPath: photoDestPath,
+      error: error.message
+    };
+  }
+}
+
+async function checkForExistingFiles(photoDestPath, videoDestPath, sourceFolderPath) {
+  // 差分コピー機能: 既存ファイルと新規ファイルを判定
+  const fs = require('fs-extra');
+  const path = require('path');
+  
+  try {
+    // ソースフォルダ内のファイルを分析
+    const sourceFiles = await fs.readdir(sourceFolderPath);
+    const filesToCopy = [];
+    const skippedFiles = [];
+    let needsPhotoFolder = false;
+    let needsVideoFolder = false;
+    let hasExistingFolders = false;
+    
+    // 既存フォルダの存在チェック
+    const photoFolderExists = await fs.pathExists(photoDestPath);
+    const videoFolderExists = await fs.pathExists(videoDestPath);
+    
+    let existingPhotoFiles = [];
+    let existingVideoFiles = [];
+    
+    // 既存ファイル一覧を取得
+    if (photoFolderExists) {
+      existingPhotoFiles = await fs.readdir(photoDestPath);
+      hasExistingFolders = true;
+    }
+    if (videoFolderExists) {
+      existingVideoFiles = await fs.readdir(videoDestPath);
+      hasExistingFolders = true;
+    }
+    
+    // ソースファイルごとに処理
+    for (const fileName of sourceFiles) {
+      const sourceFilePath = path.join(sourceFolderPath, fileName);
+      try {
+        const stats = await fs.stat(sourceFilePath);
+        if (!stats.isFile()) continue;
+        
+        const fileType = classifyFileType(fileName);
+        
+        if (fileType === 'photo') {
+          needsPhotoFolder = true;
+          if (photoFolderExists && existingPhotoFiles.includes(fileName)) {
+            // 既存ファイルはスキップ
+            skippedFiles.push({ fileName, fileType, sourceFilePath });
+          } else {
+            // 新規ファイルはコピー対象
+            filesToCopy.push({ fileName, fileType, sourceFilePath });
+          }
+        } else if (fileType === 'video') {
+          needsVideoFolder = true;
+          if (videoFolderExists && existingVideoFiles.includes(fileName)) {
+            // 既存ファイルはスキップ
+            skippedFiles.push({ fileName, fileType, sourceFilePath });
+          } else {
+            // 新規ファイルはコピー対象
+            filesToCopy.push({ fileName, fileType, sourceFilePath });
+          }
+        }
+      } catch (error) {
+        // ファイル読み取りエラーは無視
+        console.error(`ファイル分析エラー: ${fileName}`, error);
+        continue;
+      }
+    }
+    
+    return {
+      filesToCopy,
+      skippedFiles,
+      needsPhotoFolder,
+      needsVideoFolder,
+      hasExistingFolders,
+      photoFolderExists,
+      videoFolderExists
+    };
+    
+  } catch (error) {
+    console.error('ファイル差分チェックエラー:', error);
+    // エラーが発生した場合は安全のため空のリストを返す
+    return {
+      filesToCopy: [],
+      skippedFiles: [],
+      needsPhotoFolder: false,
+      needsVideoFolder: false,
+      hasExistingFolders: false,
+      photoFolderExists: false,
+      videoFolderExists: false,
       error: error.message
     };
   }
@@ -481,6 +554,7 @@ module.exports = {
   classifyFileType,
   generateDestinationPath,
   checkForExistingFolders,
+  checkForExistingFiles,
   getImageThumbnails,
   resizeImageToThumbnail,
   getFullSizeImage,
