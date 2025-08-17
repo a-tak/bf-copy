@@ -1,6 +1,6 @@
 {
   "name": "bf-copy",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "BF Camera File Copy Application",
   "main": "src/main/main.js",
   "scripts": {
