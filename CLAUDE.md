@@ -112,4 +112,9 @@ BFカメラから写真・動画をWindows/macOSに自動コピーするElectron
 - GitHubの情報を取得する場合はghコマンドを使用すること
 - PRを作成する際は元のイシューと紐付けて作成すること
 
+## UIレイアウト調整
+- タイトルエリア削除やレスポンシブ対応の詳細手順は `docs/ui-layout-adjustment-guide.md` を参照
+- `calc(100vh - 320px)` が2カラムレイアウトの最適な高さ設定値
+- フォルダリストには `min-height: 0` を設定してflexbox自動調整を有効化
+
 
