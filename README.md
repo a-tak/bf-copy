@@ -1,6 +1,6 @@
 # BF Copy
 
-BFカメラから写真・動画をWindows/macOSに自動コピーするElectronアプリケーション
+BFカメラから写真・動画をWindowsに自動コピーするElectronアプリケーション
 
 ## 機能
 
