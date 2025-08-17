@@ -351,39 +351,53 @@ async function getImageThumbnails(folderPath) {
     // 最大5ファイルまで制限
     const selectedFiles = jpegFiles.slice(0, 5);
     
-    // 並列処理でサムネイルを取得または生成
-    const thumbnailPromises = selectedFiles.map(async (fileName) => {
-      try {
-        const filePath = path.join(folderPath, fileName);
-        
-        // キャッシュから取得を試行
-        let thumbnailData = await getCachedThumbnail(filePath);
-        
-        if (!thumbnailData) {
-          // キャッシュにない場合は新規生成
-          console.log(`サムネイル生成中: ${fileName}`);
-          thumbnailData = await resizeImageToThumbnail(filePath);
-          
-          // 生成したサムネイルをキャッシュに保存
-          await setCachedThumbnail(filePath, thumbnailData);
-          console.log(`サムネイルキャッシュ保存: ${fileName}`);
-        } else {
-          console.log(`サムネイルキャッシュヒット: ${fileName}`);
-        }
-        
-        return {
-          fileName: fileName,
-          filePath: filePath,
-          base64Data: thumbnailData
-        };
-      } catch (error) {
-        console.error(`サムネイル処理エラー: ${fileName}`, error);
-        return null;
-      }
-    });
+    // 並列処理数を制限してサムネイルを取得または生成（最大2個同時）
+    const MAX_CONCURRENT = 2;
+    const results = [];
     
-    // 全ての並列処理の完了を待機
-    const results = await Promise.all(thumbnailPromises);
+    for (let i = 0; i < selectedFiles.length; i += MAX_CONCURRENT) {
+      const batch = selectedFiles.slice(i, i + MAX_CONCURRENT);
+      const batchPromises = batch.map(async (fileName) => {
+        try {
+          const filePath = path.join(folderPath, fileName);
+          
+          // キャッシュから取得を試行
+          const startTime = Date.now();
+          let thumbnailData = await getCachedThumbnail(filePath);
+          
+          if (!thumbnailData) {
+            // キャッシュにない場合は新規生成
+            console.log(`サムネイル生成中: ${fileName}`);
+            thumbnailData = await resizeImageToThumbnail(filePath);
+            const generateTime = Date.now() - startTime;
+            
+            // 生成したサムネイルをキャッシュに保存
+            try {
+              await setCachedThumbnail(filePath, thumbnailData);
+              console.log(`サムネイルキャッシュ保存完了: ${fileName} (生成時間: ${generateTime}ms)`);
+            } catch (cacheError) {
+              console.error(`サムネイルキャッシュ保存失敗: ${fileName}`, cacheError);
+            }
+          } else {
+            const cacheTime = Date.now() - startTime;
+            console.log(`サムネイルキャッシュヒット: ${fileName} (取得時間: ${cacheTime}ms)`);
+          }
+          
+          return {
+            fileName: fileName,
+            filePath: filePath,
+            base64Data: thumbnailData
+          };
+        } catch (error) {
+          console.error(`サムネイル処理エラー: ${fileName}`, error);
+          return null;
+        }
+      });
+      
+      // バッチ処理の完了を待機
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
     
     // nullを除外して有効なサムネイルのみを返す
     const thumbnails = results.filter(result => result !== null);

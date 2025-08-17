@@ -6,22 +6,35 @@ const os = require('os');
 let cacheDir;
 let cacheMetaPath;
 let cacheMemory = new Map();
+let isInitialized = false;
 
 async function initializeThumbnailCache(customCacheDir = null) {
+  if (isInitialized) {
+    return;
+  }
+  
   cacheDir = customCacheDir || path.join(os.tmpdir(), 'bf-copy-thumbnails');
   cacheMetaPath = path.join(cacheDir, 'cache-meta.json');
+  
+  console.log(`キャッシュディレクトリ初期化: ${cacheDir}`);
   
   await fs.ensureDir(cacheDir);
   
   if (!await fs.pathExists(cacheMetaPath)) {
+    console.log('キャッシュメタデータを新規作成');
     await fs.writeJson(cacheMetaPath, {
       version: '1.0.0',
       entries: {},
       created: new Date().toISOString()
     });
+  } else {
+    console.log('既存のキャッシュメタデータを読み込み');
   }
   
   await loadCacheMetadata();
+  console.log(`キャッシュエントリ数: ${cacheMemory.size}`);
+  
+  isInitialized = true;
 }
 
 async function loadCacheMetadata() {
@@ -69,12 +82,13 @@ async function getFileMetadata(filePath) {
 }
 
 async function getCachedThumbnail(filePath) {
-  if (!cacheDir) {
+  if (!isInitialized) {
     await initializeThumbnailCache();
   }
   
   const cacheInfo = cacheMemory.get(filePath);
   if (!cacheInfo) {
+    console.log(`キャッシュ未登録: ${path.basename(filePath)}`);
     return null;
   }
   
@@ -86,6 +100,7 @@ async function getCachedThumbnail(filePath) {
   
   if (currentMetadata.mtime !== cacheInfo.mtime || 
       currentMetadata.size !== cacheInfo.size) {
+    console.log(`ファイル変更検出: ${path.basename(filePath)}`);
     await deleteCacheEntry(filePath);
     return null;
   }
@@ -112,9 +127,11 @@ async function getCachedThumbnail(filePath) {
 }
 
 async function setCachedThumbnail(filePath, thumbnailData) {
-  if (!cacheDir) {
+  if (!isInitialized) {
     await initializeThumbnailCache();
   }
+  
+  console.log(`キャッシュ保存開始: ${path.basename(filePath)}`);
   
   const fileMetadata = await getFileMetadata(filePath);
   if (!fileMetadata) {
@@ -122,11 +139,11 @@ async function setCachedThumbnail(filePath, thumbnailData) {
   }
   
   const cacheKey = generateCacheKey(filePath);
-  const cacheFileName = `${cacheKey}.webp`;
+  const cacheFileName = `${cacheKey}.jpg`;
   const cacheFilePath = path.join(cacheDir, cacheFileName);
   
   try {
-    await fs.writeFile(cacheFilePath, thumbnailData, 'utf8');
+    await fs.writeFile(cacheFilePath, thumbnailData);
     
     const cacheInfo = {
       cacheFileName,
@@ -137,7 +154,10 @@ async function setCachedThumbnail(filePath, thumbnailData) {
     };
     
     cacheMemory.set(filePath, cacheInfo);
+    console.log(`メモリキャッシュ登録: ${path.basename(filePath)}`);
+    
     await saveCacheMetadata();
+    console.log(`メタデータ保存完了: ${path.basename(filePath)}`);
     
   } catch (error) {
     console.error('キャッシュ保存エラー:', error);
@@ -163,7 +183,7 @@ async function deleteCacheEntry(filePath) {
 }
 
 async function cleanupOrphanedCache() {
-  if (!cacheDir) {
+  if (!isInitialized) {
     await initializeThumbnailCache();
   }
   
@@ -189,7 +209,7 @@ async function cleanupOrphanedCache() {
 }
 
 async function getCacheStats() {
-  if (!cacheDir) {
+  if (!isInitialized) {
     await initializeThumbnailCache();
   }
   
@@ -215,7 +235,7 @@ async function getCacheStats() {
 }
 
 async function clearAllCache() {
-  if (!cacheDir) {
+  if (!isInitialized) {
     await initializeThumbnailCache();
   }
   
