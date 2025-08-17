@@ -339,11 +339,23 @@ class SigmaBFCopy {
                 console.log(`コピーが完了しました！写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイル`);
                 console.log(`写真: ${result.photoDestPath}`);
                 console.log(`動画: ${result.videoDestPath}`);
-                this.showNotification('success', 'コピー完了', `写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイルのコピーが完了しました`);
+                
+                // 差分コピーの結果に応じてメッセージを分岐
+                if (result.alreadyExists && (result.skippedPhotos > 0 || result.skippedVideos > 0)) {
+                    // 差分コピーの場合
+                    let message = `差分コピーが完了しました\n\n`;
+                    message += `新規コピー: 写真 ${result.copiedPhotos}ファイル, 動画 ${result.copiedVideos}ファイル\n`;
+                    message += `スキップ: 写真 ${result.skippedPhotos}ファイル, 動画 ${result.skippedVideos}ファイル`;
+                    
+                    this.showNotification('success', '差分コピー完了', message);
+                } else {
+                    // 通常のコピーの場合
+                    this.showNotification('success', 'コピー完了', `写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイルのコピーが完了しました`);
+                }
             } else {
                 console.error(`コピーに失敗しました: ${result.message}`);
                 
-                // 上書き防止エラーの場合は専用メッセージを表示
+                // 上書き防止エラーの場合は専用メッセージを表示（後方互換性のため保持）
                 if (result.overwritePrevented) {
                     this.showNotification(
                         'error', 

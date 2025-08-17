@@ -344,11 +344,11 @@ describe('ファイル操作機能', () => {
     });
   });
 
-  describe('上書禁止機能', () => {
-    test('写真フォルダが既に存在する場合はコピーを禁止する', async () => {
-      // 期待される動作:
+  describe('上書禁止機能（レガシー互換性テスト）', () => {
+    test('写真フォルダが既に存在する場合でも差分コピーが成功する', async () => {
+      // 期待される動作（新しい仕様）:
       // 1. コピー先の写真フォルダが既に存在することを検知
-      // 2. コピー処理を中止し、エラーメッセージを返す
+      // 2. 既存ファイルはスキップし、新規ファイルのみコピー
       // 3. 既存フォルダに影響を与えない
       
       const { copyFiles } = require('../src/utils/file-manager');
@@ -376,11 +376,11 @@ describe('ファイル操作機能', () => {
         
         const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
         
-        // 期待される結果: コピーが失敗する
-        expect(result.success).toBe(false);
-        expect(result.message).toContain('フォルダが既に存在します');
-        expect(result.overwritePrevented).toBe(true);
-        expect(result.conflictPath).toBe(existingPhotoPath);
+        // 期待される結果: 差分コピーが成功する
+        expect(result.success).toBe(true);
+        expect(result.alreadyExists).toBe(true);
+        expect(result.copiedPhotos).toBe(1); // test.jpgがコピーされる
+        expect(result.skippedPhotos).toBe(0); // 同名ファイルなし
         
         // 既存ファイルが保護されていることを確認
         const existingFile = path.join(existingPhotoPath, 'existing.txt');
@@ -388,16 +388,20 @@ describe('ファイル操作機能', () => {
         const content = await fs.readFile(existingFile, 'utf8');
         expect(content).toBe('existing content');
         
+        // 新しいファイルがコピーされていることを確認
+        const newFile = path.join(existingPhotoPath, 'test.jpg');
+        expect(await fs.pathExists(newFile)).toBe(true);
+        
       } finally {
         // テスト用フォルダをクリーンアップ
         await fs.remove(testDir);
       }
     });
 
-    test('動画フォルダが既に存在する場合はコピーを禁止する', async () => {
-      // 期待される動作:
+    test('動画フォルダが既に存在する場合でも差分コピーが成功する', async () => {
+      // 期待される動作（新しい仕様）:
       // 1. コピー先の動画フォルダが既に存在することを検知
-      // 2. コピー処理を中止し、エラーメッセージを返す
+      // 2. 既存ファイルはスキップし、新規ファイルのみコピー
       // 3. 既存フォルダに影響を与えない
       
       const { copyFiles } = require('../src/utils/file-manager');
@@ -425,11 +429,11 @@ describe('ファイル操作機能', () => {
         
         const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
         
-        // 期待される結果: コピーが失敗する
-        expect(result.success).toBe(false);
-        expect(result.message).toContain('フォルダが既に存在します');
-        expect(result.overwritePrevented).toBe(true);
-        expect(result.conflictPath).toBe(existingVideoPath);
+        // 期待される結果: 差分コピーが成功する
+        expect(result.success).toBe(true);
+        expect(result.alreadyExists).toBe(true);
+        expect(result.copiedVideos).toBe(1); // test.mp4がコピーされる
+        expect(result.skippedVideos).toBe(0); // 同名ファイルなし
         
         // 既存ファイルが保護されていることを確認
         const existingFile = path.join(existingVideoPath, 'existing.txt');
@@ -437,17 +441,21 @@ describe('ファイル操作機能', () => {
         const content = await fs.readFile(existingFile, 'utf8');
         expect(content).toBe('existing video content');
         
+        // 新しいファイルがコピーされていることを確認
+        const newFile = path.join(existingVideoPath, 'test.mp4');
+        expect(await fs.pathExists(newFile)).toBe(true);
+        
       } finally {
         // テスト用フォルダをクリーンアップ
         await fs.remove(testDir);
       }
     });
 
-    test('写真と動画の両方のフォルダが既に存在する場合はコピーを禁止する', async () => {
-      // 期待される動作:
+    test('写真と動画の両方のフォルダが既に存在する場合でも差分コピーが成功する', async () => {
+      // 期待される動作（新しい仕様）:
       // 1. 写真・動画両方のコピー先フォルダが既に存在することを検知
-      // 2. コピー処理を中止し、エラーメッセージを返す
-      // 3. 最初に見つかった競合フォルダをレポートする
+      // 2. 既存ファイルはスキップし、新規ファイルのみコピー
+      // 3. 既存ファイルに影響を与えない
       
       const { copyFiles } = require('../src/utils/file-manager');
       const fs = require('fs-extra');
@@ -479,11 +487,13 @@ describe('ファイル操作機能', () => {
         
         const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
         
-        // 期待される結果: コピーが失敗する
-        expect(result.success).toBe(false);
-        expect(result.message).toContain('フォルダが既に存在します');
-        expect(result.overwritePrevented).toBe(true);
-        expect(result.conflictPath).toBeTruthy();
+        // 期待される結果: 差分コピーが成功する
+        expect(result.success).toBe(true);
+        expect(result.alreadyExists).toBe(true);
+        expect(result.copiedPhotos).toBe(1); // test.jpgがコピーされる
+        expect(result.copiedVideos).toBe(1); // test.mp4がコピーされる
+        expect(result.skippedPhotos).toBe(0); // 同名ファイルなし
+        expect(result.skippedVideos).toBe(0); // 同名ファイルなし
         
         // 既存ファイルが両方とも保護されていることを確認
         const existingPhotoFile = path.join(existingPhotoPath, 'existing_photo.txt');
@@ -496,6 +506,12 @@ describe('ファイル操作機能', () => {
         const videoContent = await fs.readFile(existingVideoFile, 'utf8');
         expect(photoContent).toBe('existing photo content');
         expect(videoContent).toBe('existing video content');
+        
+        // 新しいファイルがコピーされていることを確認
+        const newPhotoFile = path.join(existingPhotoPath, 'test.jpg');
+        const newVideoFile = path.join(existingVideoPath, 'test.mp4');
+        expect(await fs.pathExists(newPhotoFile)).toBe(true);
+        expect(await fs.pathExists(newVideoFile)).toBe(true);
         
       } finally {
         // テスト用フォルダをクリーンアップ
@@ -545,6 +561,180 @@ describe('ファイル操作機能', () => {
         
         expect(await fs.pathExists(copiedPhoto)).toBe(true);
         expect(await fs.pathExists(copiedVideo)).toBe(true);
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+  });
+
+  describe('差分コピー機能', () => {
+    test('既存フォルダに一部ファイルが存在する場合、未コピーファイルのみをコピーする', async () => {
+      // 期待される動作:
+      // 1. 既存フォルダ内のファイル一覧を取得
+      // 2. ソースファイルとの差分を計算
+      // 3. 未コピーファイルのみをコピー
+      // 4. 結果にスキップしたファイル数を含める
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-incremental-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      const folderName = 'incremental-test';
+      
+      try {
+        // ソースフォルダに3つの写真ファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'photo1 content');
+        await fs.writeFile(path.join(sourceFolder, 'photo2.jpg'), 'photo2 content');
+        await fs.writeFile(path.join(sourceFolder, 'photo3.jpg'), 'photo3 content');
+        
+        // 既存フォルダにphoto1.jpgのみ事前に配置
+        const today = new Date().toISOString().slice(0, 10);
+        const existingPhotoPath = path.join(photoDestination, `${today}_${folderName}`, 'BF');
+        await fs.ensureDir(existingPhotoPath);
+        await fs.writeFile(path.join(existingPhotoPath, 'photo1.jpg'), 'existing photo1 content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
+        
+        // 期待される結果: 差分コピーが成功する
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(3);
+        expect(result.copiedPhotos).toBe(2); // photo2.jpg, photo3.jpgのみコピー
+        expect(result.copiedVideos).toBe(0);
+        expect(result.skippedPhotos).toBe(1); // photo1.jpgはスキップ
+        expect(result.skippedVideos).toBe(0);
+        expect(result.alreadyExists).toBe(true); // フォルダが既存
+        
+        // 新しいファイルがコピーされていることを確認
+        expect(await fs.pathExists(path.join(existingPhotoPath, 'photo2.jpg'))).toBe(true);
+        expect(await fs.pathExists(path.join(existingPhotoPath, 'photo3.jpg'))).toBe(true);
+        
+        // 既存ファイルが保護されていることを確認
+        const existingContent = await fs.readFile(path.join(existingPhotoPath, 'photo1.jpg'), 'utf8');
+        expect(existingContent).toBe('existing photo1 content'); // 元の内容が保持
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('既存フォルダにすべてのファイルが存在する場合、何もコピーしない', async () => {
+      // 期待される動作:
+      // 1. すべてのファイルが既存であることを検知
+      // 2. コピー処理をスキップ
+      // 3. 適切な結果を返す
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-all-exists-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      const folderName = 'all-exists-test';
+      
+      try {
+        // ソースフォルダに2つのファイルを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'photo1 content');
+        await fs.writeFile(path.join(sourceFolder, 'video1.mp4'), 'video1 content');
+        
+        // 既存フォルダに同じファイルを事前に配置
+        const today = new Date().toISOString().slice(0, 10);
+        const existingPhotoPath = path.join(photoDestination, `${today}_${folderName}`, 'BF');
+        const existingVideoPath = path.join(videoDestination, `${today}_${folderName}`, 'BF');
+        await fs.ensureDir(existingPhotoPath);
+        await fs.ensureDir(existingVideoPath);
+        await fs.writeFile(path.join(existingPhotoPath, 'photo1.jpg'), 'existing photo1 content');
+        await fs.writeFile(path.join(existingVideoPath, 'video1.mp4'), 'existing video1 content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
+        
+        // 期待される結果: すべてスキップされる
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(2);
+        expect(result.copiedPhotos).toBe(0);
+        expect(result.copiedVideos).toBe(0);
+        expect(result.skippedPhotos).toBe(1);
+        expect(result.skippedVideos).toBe(1);
+        expect(result.alreadyExists).toBe(true);
+        
+        // 既存ファイルが保護されていることを確認
+        const existingPhotoContent = await fs.readFile(path.join(existingPhotoPath, 'photo1.jpg'), 'utf8');
+        const existingVideoContent = await fs.readFile(path.join(existingVideoPath, 'video1.mp4'), 'utf8');
+        expect(existingPhotoContent).toBe('existing photo1 content');
+        expect(existingVideoContent).toBe('existing video1 content');
+        
+      } finally {
+        // テスト用フォルダをクリーンアップ
+        await fs.remove(testDir);
+      }
+    });
+
+    test('混在パターン（写真は一部既存、動画は新規）での差分コピー', async () => {
+      // 期待される動作:
+      // 1. 写真と動画の差分をそれぞれ計算
+      // 2. 未コピーファイルのみを適切なフォルダにコピー
+      // 3. 詳細な結果を返す
+      
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+      
+      // テスト用の一時フォルダを作成
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-mixed-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+      const folderName = 'mixed-test';
+      
+      try {
+        // ソースフォルダに写真2つ、動画2つを作成
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'photo1.jpg'), 'photo1 content');
+        await fs.writeFile(path.join(sourceFolder, 'photo2.jpg'), 'photo2 content');
+        await fs.writeFile(path.join(sourceFolder, 'video1.mp4'), 'video1 content');
+        await fs.writeFile(path.join(sourceFolder, 'video2.mp4'), 'video2 content');
+        
+        // 既存フォルダにphoto1.jpgのみ事前に配置（動画フォルダは存在しない）
+        const today = new Date().toISOString().slice(0, 10);
+        const existingPhotoPath = path.join(photoDestination, `${today}_${folderName}`, 'BF');
+        await fs.ensureDir(existingPhotoPath);
+        await fs.writeFile(path.join(existingPhotoPath, 'photo1.jpg'), 'existing photo1 content');
+        
+        const result = await copyFiles(sourceFolder, photoDestination, videoDestination, folderName);
+        
+        // 期待される結果
+        expect(result.success).toBe(true);
+        expect(result.totalFiles).toBe(4);
+        expect(result.copiedPhotos).toBe(1); // photo2.jpgのみコピー
+        expect(result.copiedVideos).toBe(2); // video1.mp4, video2.mp4をコピー
+        expect(result.skippedPhotos).toBe(1); // photo1.jpgはスキップ
+        expect(result.skippedVideos).toBe(0); // 動画は全てコピー
+        expect(result.alreadyExists).toBe(true);
+        
+        // 新しいファイルがコピーされていることを確認
+        expect(await fs.pathExists(path.join(existingPhotoPath, 'photo2.jpg'))).toBe(true);
+        const videoPath = path.join(videoDestination, `${today}_${folderName}`, 'BF');
+        expect(await fs.pathExists(path.join(videoPath, 'video1.mp4'))).toBe(true);
+        expect(await fs.pathExists(path.join(videoPath, 'video2.mp4'))).toBe(true);
+        
+        // 既存ファイルが保護されていることを確認
+        const existingContent = await fs.readFile(path.join(existingPhotoPath, 'photo1.jpg'), 'utf8');
+        expect(existingContent).toBe('existing photo1 content');
         
       } finally {
         // テスト用フォルダをクリーンアップ
