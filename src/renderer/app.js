@@ -3,6 +3,10 @@ class SigmaBFCopy {
         this.config = null;
         this.selectedFolder = null;
         this.cameraInfo = null;
+        this.thumbnailLoadQueue = [];
+        this.isThumbnailLoadingPaused = false;
+        this.activeThumbnailLoads = 0;
+        this.maxConcurrentThumbnailLoads = 2; // 同時読み込み数制限
         this.init();
     }
 
@@ -220,13 +224,16 @@ class SigmaBFCopy {
         const container = document.getElementById('camera-folders');
         container.innerHTML = '';
 
+        // キューをクリア
+        this.thumbnailLoadQueue = [];
+
         for (const folder of folders) {
             const folderElement = document.createElement('div');
             folderElement.className = 'folder-item';
-            
+
             // サムネイル取得を試行
             let thumbnailsHtml = '<div class="thumbnails-loading">📷 読み込み中...</div>';
-            
+
             folderElement.innerHTML = `
                 <div class="folder-info">
                     <h4>📁 ${folder.name}</h4>
@@ -239,9 +246,49 @@ class SigmaBFCopy {
 
             folderElement.addEventListener('click', () => this.selectCameraFolder(folder, folderElement));
             container.appendChild(folderElement);
-            
-            // 非同期でサムネイルを読み込み
-            this.loadFolderThumbnails(folder.path, folderElement);
+
+            // サムネイル読み込みをキューに追加
+            this.queueThumbnailLoad(folder.path, folderElement);
+        }
+    }
+
+    queueThumbnailLoad(folderPath, folderElement) {
+        // キューに追加
+        this.thumbnailLoadQueue.push({ folderPath, folderElement });
+
+        // キュー処理を開始
+        this.processThumnailQueue();
+    }
+
+    async processThumnailQueue() {
+        // 既に最大同時実行数に達している場合はスキップ
+        if (this.activeThumbnailLoads >= this.maxConcurrentThumbnailLoads) {
+            return;
+        }
+
+        // 一時停止中の場合はスキップ
+        if (this.isThumbnailLoadingPaused) {
+            return;
+        }
+
+        // キューが空の場合は終了
+        if (this.thumbnailLoadQueue.length === 0) {
+            return;
+        }
+
+        // キューから次のタスクを取り出す
+        const task = this.thumbnailLoadQueue.shift();
+        this.activeThumbnailLoads++;
+
+        try {
+            await this.loadFolderThumbnails(task.folderPath, task.folderElement);
+        } catch (error) {
+            console.error('サムネイル読み込みエラー:', error);
+        } finally {
+            this.activeThumbnailLoads--;
+
+            // 次のタスクを処理
+            this.processThumnailQueue();
         }
     }
 
@@ -291,7 +338,7 @@ class SigmaBFCopy {
 
     async startCopy() {
         const folderName = document.getElementById('folder-name').value.trim();
-        
+
         if (!folderName) {
             this.showNotification('error', 'エラー', 'フォルダ名を入力してください');
             // フォルダ名フィールドにフォーカスを当てる
@@ -306,10 +353,12 @@ class SigmaBFCopy {
             return;
         }
 
+        // サムネイル読み込みを一時停止してコピー処理を優先
+        this.pauseThumbnailLoading();
 
         // 進行状況セクションを表示
         document.getElementById('progress-section').classList.remove('hidden');
-        
+
         try {
             console.log('コピー開始:', {
                 sourceFolderPath: this.selectedFolder.path,
@@ -370,6 +419,24 @@ class SigmaBFCopy {
             console.error('コピーエラー:', error);
             console.error(`コピー中にエラーが発生しました: ${error.message}`);
             this.showNotification('error', 'コピーエラー', `コピー中にエラーが発生しました: ${error.message}`);
+        } finally {
+            // コピー完了後、サムネイル読み込みを再開
+            this.resumeThumbnailLoading();
+        }
+    }
+
+    pauseThumbnailLoading() {
+        console.log('サムネイル読み込みを一時停止（コピー処理優先）');
+        this.isThumbnailLoadingPaused = true;
+    }
+
+    resumeThumbnailLoading() {
+        console.log('サムネイル読み込みを再開');
+        this.isThumbnailLoadingPaused = false;
+
+        // キューに残っているタスクがあれば処理を再開
+        if (this.thumbnailLoadQueue.length > 0) {
+            this.processThumnailQueue();
         }
     }
 
