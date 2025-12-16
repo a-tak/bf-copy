@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <title>BF Copy</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
         <!-- 通知システム -->
@@ -17,7 +19,7 @@
             <div class="modal-content">
                 <h2>初期設定</h2>
                 <p>写真と動画のコピー先フォルダを設定してください</p>
-                
+
                 <div class="setting-group">
                     <label>写真コピー先:</label>
                     <div class="folder-input">
@@ -25,7 +27,7 @@
                         <button id="select-photo-btn">📁 選択</button>
                     </div>
                 </div>
-                
+
                 <div class="setting-group">
                     <label>動画コピー先:</label>
                     <div class="folder-input">
@@ -33,7 +35,7 @@
                         <button id="select-video-btn">📁 選択</button>
                     </div>
                 </div>
-                
+
                 <div class="modal-actions">
                     <button id="save-initial-config" class="primary">設定を保存</button>
                 </div>
@@ -46,12 +48,12 @@
             <section class="camera-status">
                 <div id="camera-not-detected" class="status-card">
                     <h3>📷 カメラを接続してください</h3>
-                    <p>BFカメラをUSBで接続してください</p>
+                    <p>カメラをUSBで接続してください</p>
                     <button id="refresh-camera">🔄 再検索</button>
                 </div>
-                
+
                 <div id="camera-detected" class="status-card hidden">
-                    <h3>✅ BF カメラが見つかりました</h3>
+                    <h3 id="camera-detected-title">✅ カメラが見つかりました</h3>
                     <p id="camera-info"></p>
                 </div>
             </section>
@@ -77,12 +79,12 @@
                     <!-- コピー設定 -->
                     <section id="copy-settings" class="hidden">
                         <h3>⚙️ コピー設定</h3>
-                        
+
                         <div class="setting-group">
                             <label>フォルダ名:</label>
                             <input type="text" id="folder-name" placeholder="例: 撮影セッション">
                         </div>
-                        
+
                         <div class="setting-group">
                             <label>現在の設定:</label>
                             <div class="current-settings">
@@ -91,7 +93,7 @@
                             </div>
                             <button id="change-settings">設定変更</button>
                         </div>
-                        
+
                         <div class="copy-actions">
                             <button id="start-copy" class="primary">📋 コピー開始</button>
                         </div>
@@ -119,7 +121,7 @@
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content">
                 <h2>設定変更</h2>
-                
+
                 <div class="setting-group">
                     <label>写真コピー先:</label>
                     <div class="folder-input">
@@ -127,7 +129,7 @@
                         <button id="settings-select-photo">📁 選択</button>
                     </div>
                 </div>
-                
+
                 <div class="setting-group">
                     <label>動画コピー先:</label>
                     <div class="folder-input">
@@ -135,7 +137,7 @@
                         <button id="settings-select-video">📁 選択</button>
                     </div>
                 </div>
-                
+
                 <div class="modal-actions">
                     <button id="cancel-settings">キャンセル</button>
                     <button id="save-settings" class="primary">保存</button>
@@ -148,7 +150,7 @@
             <div class="image-modal-overlay">
                 <div class="image-modal-content">
                     <button class="image-modal-close" id="close-image-modal" aria-label="閉じる">×</button>
-                    
+
                     <div class="image-container">
                         <div class="loading-spinner hidden" id="image-loading">
                             <div class="spinner"></div>
@@ -156,12 +158,12 @@
                         </div>
                         <img id="modal-image" alt="" class="modal-image">
                     </div>
-                    
+
                     <div class="image-info">
                         <h4 id="image-filename">画像ファイル名</h4>
                         <p id="image-details">ファイル情報</p>
                     </div>
-                    
+
                     <div class="image-navigation">
                         <button id="prev-image" class="nav-button" aria-label="前の画像">
                             <span>←</span>
@@ -180,4 +182,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

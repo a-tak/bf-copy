@@ -8,17 +8,17 @@ async function detectCameraWithDCIM() {
   const fs = require('fs-extra');
   const path = require('path');
   const os = require('os');
-  
+
   try {
     // Windowsでドライブ一覧を取得
     if (os.platform() === 'win32') {
       const drives = [];
-      
+
       // A-Z までのドライブレターをチェック
       for (let i = 65; i <= 90; i++) {
         const driveLetter = String.fromCharCode(i);
         const drivePath = `${driveLetter}:\\`;
-        
+
         try {
           // ドライブが存在するかチェック
           const stats = await fs.stat(drivePath);
@@ -39,10 +39,10 @@ async function detectCameraWithDCIM() {
           continue;
         }
       }
-      
+
       return drives.length > 0 ? drives[0] : null;
     }
-    
+
     return null;
   } catch (error) {
     console.error('カメラ検知エラー:', error);
@@ -55,16 +55,16 @@ async function detectSigmaCamera() {
   const fs = require('fs-extra');
   const path = require('path');
   const os = require('os');
-  
+
   try {
     if (os.platform() === 'win32') {
       const drives = [];
-      
+
       // A-Z までのドライブレターをチェック
       for (let i = 65; i <= 90; i++) {
         const driveLetter = String.fromCharCode(i);
         const drivePath = `${driveLetter}:\\`;
-        
+
         try {
           const stats = await fs.stat(drivePath);
           if (stats.isDirectory()) {
@@ -82,15 +82,18 @@ async function detectSigmaCamera() {
           continue;
         }
       }
-      
-      // BFカメラを探す
-      const bfDrive = drives.find(drive => 
-        drive.label && (drive.label.toLowerCase().includes('sigma') || drive.label.toLowerCase().includes('bf'))
+
+      const bfDrive = drives.find(drive =>
+        drive.label && (
+          drive.label.toLowerCase().includes('sigma') ||
+          drive.label.toLowerCase().includes('bf') ||
+          drive.label.toLowerCase().includes('lumix')
+        )
       );
-      
+
       return bfDrive || drives[0] || null; // BFカメラが見つからない場合は最初のDCIMドライブを返す
     }
-    
+
     return null;
   } catch (error) {
     console.error('BF カメラ検知エラー:', error);
@@ -104,15 +107,15 @@ async function getDriveLabel(drivePath) {
     const { exec } = require('child_process');
     const util = require('util');
     const execPromise = util.promisify(exec);
-    
+
     const driveLetter = drivePath.replace(':\\', '');
-    
+
     // PowerShellでWMIを使用してドライブラベルを取得
     const { stdout } = await execPromise(
       `powershell -Command "Get-WmiObject -Class Win32_LogicalDisk | Where-Object {$_.DeviceID -eq '${driveLetter}:'} | Select-Object -ExpandProperty VolumeName"`,
       { encoding: 'utf8' }
     );
-    
+
     return stdout.trim();
   } catch (error) {
     console.error('ドライブラベル取得エラー:', error);
