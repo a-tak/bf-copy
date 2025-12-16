@@ -143,6 +143,16 @@ describe('ファイル操作機能', () => {
       expect(result).toBe('photo');
     });
 
+    test('RW2ファイルを写真として分類する', () => {
+      // 期待される動作:
+      // RW2ファイル（Lumix RAW形式）を写真として分類
+
+      const { classifyFileType } = require('../src/utils/file-manager');
+
+      const result = classifyFileType('test.rw2');
+      expect(result).toBe('photo');
+    });
+
 
 
     test('コピー先フォルダ名を正しく生成する（デフォルト）', async () => {

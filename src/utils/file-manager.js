@@ -132,7 +132,9 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       copiedVideos: 0,
       skippedPhotos: 0,
       skippedVideos: 0,
+      convertedRw2: 0,  // RW2→DNG変換成功数
       errors: [],
+      warnings: [],     // 警告メッセージ（Adobe DNG Converter未インストール等）
       photoDestPath,
       videoDestPath,
       alreadyExists: fileCheck.hasExistingFolders
@@ -161,6 +163,9 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       await fs.ensureDir(videoDestPath);
     }
 
+    // RW2ファイルのリスト（一括変換用）
+    const rw2FilesToConvert = [];
+
     // ファイルをコピー
     let copiedCount = 0;
     for (const { fileName, sourceFilePath, fileType } of fileCheck.filesToCopy) {
@@ -178,6 +183,16 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
           overwrite: false, // 既存ファイルは上書きしない
           errorOnExist: false
         });
+
+        // RW2ファイルをリストに追加（Lumixカメラの場合のみ）
+        if (fileType === 'photo' &&
+            path.extname(fileName).toLowerCase() === '.rw2' &&
+            subFolderName === 'GH7') {
+          rw2FilesToConvert.push({
+            fileName: fileName,
+            filePath: destPath
+          });
+        }
 
         if (fileType === 'photo') {
           copyResults.copiedPhotos++;
@@ -208,6 +223,68 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
       }
     }
 
+    // コピー完了後、RW2ファイルを一括でDNGに変換
+    if (rw2FilesToConvert.length > 0) {
+      console.log(`RW2ファイル一括変換開始: ${rw2FilesToConvert.length}ファイル`);
+
+      try {
+        const { convertMultipleRw2ToDng, detectDngConverter } = require('./dng-converter');
+
+        // Adobe DNG Converterの存在確認
+        const converterExists = await detectDngConverter();
+
+        if (converterExists) {
+          // 変換中メッセージを送信
+          if (progressCallback) {
+            progressCallback({
+              current: copiedCount,
+              total: fileCheck.filesToCopy.length,
+              fileName: '',
+              percentage: 100,
+              message: `DNG変換中: ${rw2FilesToConvert.length}ファイル`
+            });
+          }
+
+          // 一括変換実行
+          const conversionResults = await convertMultipleRw2ToDng(rw2FilesToConvert, photoDestPath, progressCallback, copiedCount, fileCheck.filesToCopy.length);
+
+          // 変換結果を集計
+          copyResults.convertedRw2 = conversionResults.successCount;
+          if (conversionResults.errors.length > 0) {
+            copyResults.errors.push(...conversionResults.errors);
+          }
+
+          // 変換完了メッセージを送信
+          if (progressCallback) {
+            progressCallback({
+              current: copiedCount,
+              total: fileCheck.filesToCopy.length,
+              fileName: '',
+              percentage: 100,
+              message: `DNG変換完了: ${conversionResults.successCount}/${rw2FilesToConvert.length}ファイル`
+            });
+          }
+          console.log(`DNG変換完了: ${conversionResults.successCount}/${rw2FilesToConvert.length}ファイル`);
+
+        } else {
+          // Adobe DNG Converter未インストールの警告
+          console.warn(`Adobe DNG Converter未インストール。RW2ファイルはそのままコピーされました`);
+          for (const rw2File of rw2FilesToConvert) {
+            copyResults.warnings.push({
+              fileName: rw2File.fileName,
+              warning: 'Adobe DNG Converter未インストール。RW2ファイルのみ保存されました。'
+            });
+          }
+        }
+      } catch (conversionError) {
+        console.error('RW2一括変換処理エラー:', conversionError);
+        copyResults.errors.push({
+          fileName: 'RW2一括変換',
+          error: `変換エラー: ${conversionError.message}`
+        });
+      }
+    }
+
     console.log('コピー結果:', copyResults);
     return copyResults;
 
@@ -224,7 +301,7 @@ function classifyFileType(fileName) {
   // テストで要求されたファイル分類機能を実装
   const ext = require('path').extname(fileName).toLowerCase();
 
-  const photoExtensions = ['.jpg', '.jpeg', '.dng', '.raw', '.tiff', '.tif', '.heif', '.heic'];
+  const photoExtensions = ['.jpg', '.jpeg', '.dng', '.raw', '.rw2', '.tiff', '.tif', '.heif', '.heic'];
   const videoExtensions = ['.mov', '.mp4', '.avi', '.mkv', '.m4v'];
 
   if (photoExtensions.includes(ext)) {
