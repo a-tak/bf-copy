@@ -58,7 +58,11 @@ class SigmaBFCopy {
         if (progressFill && progressText && progressDetails) {
             progressFill.style.width = `${progressData.percentage}%`;
             progressText.textContent = `${progressData.percentage}%`;
-            progressDetails.textContent = `${progressData.fileName} (${progressData.current}/${progressData.total})`;
+
+            // メッセージが指定されている場合（変換中など）はそれを表示、なければデフォルトメッセージ
+            const statusMessage = progressData.message ||
+                `${progressData.fileName} (${progressData.current}/${progressData.total})`;
+            progressDetails.textContent = statusMessage;
         }
     }
 
