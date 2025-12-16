@@ -16,7 +16,7 @@ class SigmaBFCopy {
         this.setupEventListeners();
         this.setupCopyProgressListener();
         this.setupTrayListeners();
-        
+
         if (!this.config || this.config.isFirstRun !== false) {
             this.showInitialSetup();
         } else {
@@ -42,7 +42,7 @@ class SigmaBFCopy {
         window.electronAPI.onRefreshCamera(() => {
             this.startCameraDetection();
         });
-        
+
         // カメラ接続イベント
         window.electronAPI.onCameraConnected((event, cameraInfo) => {
             console.log('カメラ接続イベントを受信:', cameraInfo);
@@ -97,7 +97,7 @@ class SigmaBFCopy {
         document.getElementById('refresh-camera').addEventListener('click', () => this.startCameraDetection());
         document.getElementById('change-settings').addEventListener('click', () => this.showSettingsModal());
         document.getElementById('start-copy').addEventListener('click', () => this.startCopy());
-        
+
 
         // 設定モーダル
         document.getElementById('settings-select-photo').addEventListener('click', () => this.selectFolder('settings-photo-dest'));
@@ -161,10 +161,10 @@ class SigmaBFCopy {
 
     async startCameraDetection() {
         console.log('カメラ検知開始...');
-        
+
         try {
             const cameraInfo = await window.electronAPI.detectSigmaCamera();
-            
+
             if (cameraInfo) {
                 console.log('Sigma BFカメラが見つかりました:', cameraInfo);
                 this.cameraInfo = cameraInfo;
@@ -190,22 +190,35 @@ class SigmaBFCopy {
         document.getElementById('camera-not-detected').classList.add('hidden');
         document.getElementById('camera-detected').classList.remove('hidden');
         document.getElementById('camera-info').textContent = cameraInfo;
-        
+
+        // カメラ名に応じてタイトルを変更
+        const titleElement = document.getElementById('camera-detected-title');
+        if (titleElement && this.cameraInfo && this.cameraInfo.label) {
+            const label = this.cameraInfo.label.toLowerCase();
+            if (label.includes('lumix') || label.includes('gh7')) {
+                titleElement.textContent = '✅ LUMIX カメラが見つかりました';
+            } else if (label.includes('sigma') || label.includes('bf')) {
+                titleElement.textContent = '✅ Sigma BF カメラが見つかりました';
+            } else {
+                titleElement.textContent = '✅ カメラが見つかりました';
+            }
+        }
+
         this.loadCameraFolders();
     }
 
     async loadCameraFolders() {
         console.log('カメラフォルダ読み込み...');
         console.log('this.cameraInfo:', this.cameraInfo);
-        
+
         if (!this.cameraInfo) {
             console.error('カメラ情報がありません');
             return;
         }
-        
+
         try {
             const folders = await window.electronAPI.getCameraFolders(this.cameraInfo.path);
-            
+
             if (folders.length > 0) {
                 console.log('カメラフォルダ一覧:', folders);
                 this.displayFolderList(folders);
@@ -296,9 +309,9 @@ class SigmaBFCopy {
         try {
             const thumbnails = await window.electronAPI.getFolderThumbnails(folderPath);
             const thumbnailContainer = folderElement.querySelector('.folder-thumbnails');
-            
+
             if (thumbnails.length > 0) {
-                thumbnailContainer.innerHTML = thumbnails.map((thumbnail, index) => 
+                thumbnailContainer.innerHTML = thumbnails.map((thumbnail, index) =>
                     `<img src="${thumbnail.base64Data}" 
                           alt="${thumbnail.fileName}" 
                           class="thumbnail" 
@@ -306,7 +319,7 @@ class SigmaBFCopy {
                           data-thumbnail-index="${index}"
                           data-folder-path="${folderPath}">`
                 ).join('');
-                
+
                 // サムネイルクリックイベントを追加
                 this.addThumbnailClickEvents(thumbnailContainer, thumbnails, folderPath);
             } else {
@@ -332,7 +345,7 @@ class SigmaBFCopy {
         // プレースホルダーを非表示にしてコピー設定セクションを表示
         document.getElementById('no-folder-selected').classList.add('hidden');
         document.getElementById('copy-settings').classList.remove('hidden');
-        
+
         console.log('選択されたフォルダ:', folder);
     }
 
@@ -360,11 +373,19 @@ class SigmaBFCopy {
         document.getElementById('progress-section').classList.remove('hidden');
 
         try {
+            // カメラ名からサブフォルダ名（BFまたはGH7）を決定
+            let subFolderName = 'BF';
+            if (this.cameraInfo && this.cameraInfo.label &&
+                (this.cameraInfo.label.toLowerCase().includes('lumix') || this.cameraInfo.label.toLowerCase().includes('gh7'))) {
+                subFolderName = 'GH7';
+            }
+
             console.log('コピー開始:', {
                 sourceFolderPath: this.selectedFolder.path,
                 folderName: folderName,
                 photoDestination: this.config.photoDestination,
-                videoDestination: this.config.videoDestination
+                videoDestination: this.config.videoDestination,
+                subFolderName: subFolderName
             });
 
             console.log('呼び出しパラメータ:', {
@@ -378,7 +399,8 @@ class SigmaBFCopy {
                 this.selectedFolder.path,
                 this.config.photoDestination,
                 this.config.videoDestination,
-                folderName
+                folderName,
+                subFolderName
             );
 
             console.log('コピー結果:', result);
@@ -388,14 +410,14 @@ class SigmaBFCopy {
                 console.log(`コピーが完了しました！写真: ${result.copiedPhotos}ファイル, 動画: ${result.copiedVideos}ファイル`);
                 console.log(`写真: ${result.photoDestPath}`);
                 console.log(`動画: ${result.videoDestPath}`);
-                
+
                 // 差分コピーの結果に応じてメッセージを分岐
                 if (result.alreadyExists && (result.skippedPhotos > 0 || result.skippedVideos > 0)) {
                     // 差分コピーの場合
                     let message = `差分コピーが完了しました\n\n`;
                     message += `新規コピー: 写真 ${result.copiedPhotos}ファイル, 動画 ${result.copiedVideos}ファイル\n`;
                     message += `スキップ: 写真 ${result.skippedPhotos}ファイル, 動画 ${result.skippedVideos}ファイル`;
-                    
+
                     this.showNotification('success', '差分コピー完了', message);
                 } else {
                     // 通常のコピーの場合
@@ -403,12 +425,12 @@ class SigmaBFCopy {
                 }
             } else {
                 console.error(`コピーに失敗しました: ${result.message}`);
-                
+
                 // 上書き防止エラーの場合は専用メッセージを表示（後方互換性のため保持）
                 if (result.overwritePrevented) {
                     this.showNotification(
-                        'error', 
-                        '上書き禁止', 
+                        'error',
+                        '上書き禁止',
                         `既存のフォルダが検出されました。\n${result.conflictPath}\n\nコピーを中止しました。`
                     );
                 } else {
@@ -474,10 +496,10 @@ class SigmaBFCopy {
     handleCameraConnected(cameraInfo) {
         // カメラ情報を更新
         this.cameraInfo = cameraInfo;
-        
+
         // カメラ検知状態を表示
         this.showCameraDetected(`${cameraInfo.drive}:\\ - ${cameraInfo.label}`);
-        
+
         // 通知メッセージを表示（オプション）
         console.log('Sigma BFカメラが接続されました。ウィンドウをアクティブ化しています。');
     }
@@ -531,9 +553,9 @@ class SigmaBFCopy {
         if (actions && actions.length > 0) {
             actionsHtml = `
                 <div class="notification-actions">
-                    ${actions.map((action, index) => 
-                        `<button onclick="window.currentApp.handleNotificationAction('${notificationId}', ${index})">${action.text}</button>`
-                    ).join('')}
+                    ${actions.map((action, index) =>
+                `<button onclick="window.currentApp.handleNotificationAction('${notificationId}', ${index})">${action.text}</button>`
+            ).join('')}
                 </div>
             `;
         }
@@ -593,7 +615,7 @@ class SigmaBFCopy {
     // 画像拡大表示機能
     addThumbnailClickEvents(container, thumbnails, folderPath) {
         const thumbnailImages = container.querySelectorAll('.thumbnail');
-        
+
         thumbnailImages.forEach((img, index) => {
             img.addEventListener('click', () => {
                 this.openImageModal(thumbnails, index, folderPath);
@@ -605,7 +627,7 @@ class SigmaBFCopy {
         this.currentThumbnails = thumbnails;
         this.currentImageIndex = initialIndex;
         this.currentFolderPath = folderPath;
-        
+
         const modal = document.getElementById('image-modal');
         const modalImage = document.getElementById('modal-image');
         const imageFilename = document.getElementById('image-filename');
@@ -613,19 +635,19 @@ class SigmaBFCopy {
         const imageCounter = document.getElementById('image-counter');
         const prevButton = document.getElementById('prev-image');
         const nextButton = document.getElementById('next-image');
-        
+
         // モーダルを表示
         modal.classList.remove('hidden');
-        
+
         // 現在の画像を表示
         this.displayModalImage();
-        
+
         // ナビゲーションボタンのイベントリスナーを設定
         if (!this.modalEventListenersAdded) {
             this.setupModalEventListeners();
             this.modalEventListenersAdded = true;
         }
-        
+
         // 背景スクロールを無効化
         document.body.style.overflow = 'hidden';
     }
@@ -639,28 +661,28 @@ class SigmaBFCopy {
         const prevButton = document.getElementById('prev-image');
         const nextButton = document.getElementById('next-image');
         const loadingSpinner = document.getElementById('image-loading');
-        
+
         // ローディング表示
         loadingSpinner.classList.remove('hidden');
         modalImage.style.opacity = '0';
-        
+
         // 画像情報を更新
         imageFilename.textContent = thumbnail.fileName;
         imageDetails.textContent = `${this.currentImageIndex + 1} / ${this.currentThumbnails.length}`;
         imageCounter.textContent = `${this.currentImageIndex + 1} / ${this.currentThumbnails.length}`;
-        
+
         // ナビゲーションボタンの状態を更新
         prevButton.disabled = this.currentImageIndex === 0;
         nextButton.disabled = this.currentImageIndex === this.currentThumbnails.length - 1;
-        
+
         // まずサムネイル画像を即座に表示
         modalImage.src = thumbnail.base64Data;
         modalImage.alt = thumbnail.fileName;
         modalImage.style.opacity = '0.7'; // サムネイル表示時は少し薄く
-        
+
         // フルサイズ画像を非同期で読み込み
         this.loadFullSizeImage(thumbnail.filePath, modalImage, loadingSpinner);
-        
+
         // 画像読み込み失敗時の処理（サムネイル用）
         modalImage.onerror = () => {
             loadingSpinner.classList.add('hidden');
@@ -675,29 +697,29 @@ class SigmaBFCopy {
         const prevButton = document.getElementById('prev-image');
         const nextButton = document.getElementById('next-image');
         const overlay = modal.querySelector('.image-modal-overlay');
-        
+
         // 閉じるボタン
         closeButton.addEventListener('click', () => {
             this.closeImageModal();
         });
-        
+
         // オーバーレイクリックで閉じる
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 this.closeImageModal();
             }
         });
-        
+
         // 前の画像ボタン
         prevButton.addEventListener('click', () => {
             this.showPreviousImage();
         });
-        
+
         // 次の画像ボタン
         nextButton.addEventListener('click', () => {
             this.showNextImage();
         });
-        
+
         // キーボードショートカット
         this.modalKeyboardHandler = (e) => {
             // モーダルが開いている時のみ処理
@@ -718,23 +740,23 @@ class SigmaBFCopy {
                 }
             }
         };
-        
+
         document.addEventListener('keydown', this.modalKeyboardHandler);
     }
 
     closeImageModal() {
         const modal = document.getElementById('image-modal');
         modal.classList.add('hidden');
-        
+
         // 背景スクロールを再有効化
         document.body.style.overflow = '';
-        
+
         // キーボードイベントリスナーを削除
         if (this.modalKeyboardHandler) {
             document.removeEventListener('keydown', this.modalKeyboardHandler);
             this.modalKeyboardHandler = null;
         }
-        
+
         // データをクリア
         this.currentThumbnails = null;
         this.currentImageIndex = 0;
@@ -758,13 +780,13 @@ class SigmaBFCopy {
     async loadFullSizeImage(imagePath, modalImage, loadingSpinner) {
         try {
             console.log('フルサイズ画像読み込み開始:', imagePath);
-            
+
             // フルサイズ画像を取得
             const fullSizeImageData = await window.electronAPI.getFullSizeImage(imagePath);
-            
+
             // 新しい画像要素を作成して先読み
             const tempImage = new Image();
-            
+
             tempImage.onload = () => {
                 // フルサイズ画像の読み込みが完了したら置き換え
                 modalImage.src = fullSizeImageData;
@@ -772,17 +794,17 @@ class SigmaBFCopy {
                 loadingSpinner.classList.add('hidden');
                 console.log('フルサイズ画像読み込み完了:', imagePath);
             };
-            
+
             tempImage.onerror = () => {
                 // フルサイズ画像の読み込みに失敗した場合はサムネイルのまま
                 modalImage.style.opacity = '1';
                 loadingSpinner.classList.add('hidden');
                 console.error('フルサイズ画像読み込み失敗:', imagePath);
             };
-            
+
             // 先読み開始
             tempImage.src = fullSizeImageData;
-            
+
         } catch (error) {
             // API呼び出しに失敗した場合もサムネイルのまま
             modalImage.style.opacity = '1';

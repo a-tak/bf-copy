@@ -70,11 +70,11 @@ function startCameraMonitoring() {
   cameraMonitoringInterval = setInterval(async () => {
     try {
       const currentCamera = await detectSigmaCamera();
-      
+
       // カメラが新しく検知された場合
       if (currentCamera && !lastDetectedCamera) {
         console.log('BFカメラが新しく接続されました:', currentCamera);
-        
+
         // カメラ検知時にキャッシュクリーンアップを非同期実行（ブロックしない）
         setImmediate(async () => {
           try {
@@ -88,19 +88,19 @@ function startCameraMonitoring() {
             console.error('カメラ検知時のキャッシュクリーンアップエラー:', error);
           }
         });
-        
+
         // ウィンドウをアクティブ化
         activateMainWindow();
-        
+
         // レンダラープロセスにカメラ検知を通知
         if (mainWindow) {
           mainWindow.webContents.send('camera-connected', currentCamera);
         }
       }
-      
+
       // カメラ状態を更新
       lastDetectedCamera = currentCamera;
-      
+
     } catch (error) {
       console.error('カメラ監視エラー:', error);
     }
@@ -120,17 +120,17 @@ function activateMainWindow() {
     if (mainWindow.isMinimized()) {
       mainWindow.restore();
     }
-    
+
     // ウィンドウを表示
     mainWindow.show();
-    
+
     // ウィンドウをフォーカス
     mainWindow.focus();
-    
+
     // setAlwaysOnTopの使用を停止（フォーカス問題の原因）
     // mainWindow.setAlwaysOnTop(true);
     // mainWindow.setAlwaysOnTop(false);
-    
+
     console.log('メインウィンドウをアクティブ化しました');
   }
 }
@@ -139,9 +139,9 @@ function activateMainWindow() {
 function createTray() {
   const iconPath = path.join(__dirname, '../../assets/bf-copy-icon-32.png');
   const trayIcon = nativeImage.createFromPath(iconPath);
-  
+
   tray = new Tray(trayIcon);
-  
+
   const contextMenu = Menu.buildFromTemplate([
     {
       label: 'BF Copy を表示',
@@ -186,10 +186,10 @@ function createTray() {
       }
     }
   ]);
-  
+
   tray.setContextMenu(contextMenu);
   tray.setToolTip('BF Copy - カメラファイル自動コピー');
-  
+
   // ダブルクリックでウィンドウを表示
   tray.on('double-click', () => {
     mainWindow.show();
@@ -203,7 +203,7 @@ function createTray() {
 app.whenReady().then(async () => {
   createWindow();
   createTray();
-  
+
   // キャッシュシステムの初期化とクリーンアップ
   try {
     const { performMaintenanceCleanup } = require('../utils/thumbnail-cache');
@@ -212,14 +212,14 @@ app.whenReady().then(async () => {
   } catch (error) {
     console.error('キャッシュクリーンアップエラー:', error);
   }
-  
+
   // カメラ監視を開始
   startCameraMonitoring();
-  
+
   // 初回起動時に自動起動を有効にするかユーザーに確認
   const currentAutoStartStatus = autoStartManager.getAutoStartStatus();
   autoStartManager.logAutoStartDetails(); // デバッグ情報を出力
-  
+
   if (!currentAutoStartStatus.openAtLogin && !process.argv.includes('--dev')) {
     setTimeout(() => {
       if (mainWindow) {
@@ -304,13 +304,13 @@ ipcMain.handle('get-full-size-image', async (event, imagePath) => {
 const { copyFiles } = require('../utils/file-manager');
 
 // ファイルコピー（進行状況通知付き）
-ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName) => {
+ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName, subFolderName) => {
   try {
     // file-manager.jsの正しい実装を使用してファイルコピー（進行状況コールバック付き）
     const copyResults = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, (progress) => {
       // 進行状況をレンダラープロセスに送信
       mainWindow.webContents.send('copy-progress', progress);
-    });
+    }, subFolderName);
 
     console.log('コピー結果:', copyResults);
     return copyResults;
