@@ -48,6 +48,7 @@
       "owner": "a-tak",
       "repo": "bf-copy"
     },
+    "generateUpdatesFilesForAllChannels": false,
     "files": [
       "src/**/*",
       "assets/**/*",
