@@ -24,6 +24,17 @@ if (!gotTheLock) {
 }
 
 function createWindow() {
+  // 自動起動時（OS起動時）は最小化して開始するかを判定
+  // macOS: wasOpenedAsHidden、Windows: --hidden 引数
+  const shouldStartHidden = app.getLoginItemSettings().wasOpenedAsHidden ||
+                            process.argv.includes('--hidden');
+
+  console.log('起動モード判定:', {
+    wasOpenedAsHidden: app.getLoginItemSettings().wasOpenedAsHidden,
+    hasHiddenArg: process.argv.includes('--hidden'),
+    shouldStartHidden
+  });
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 1200,
@@ -33,7 +44,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, '../../assets/icon.ico'),
-    show: !app.getLoginItemSettings().wasOpenedAsHidden, // OS起動時は非表示で開始
+    show: !shouldStartHidden, // 自動起動時は非表示で開始
     autoHideMenuBar: true // メニューバーを自動非表示
   });
 

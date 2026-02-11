@@ -60,11 +60,13 @@ function setAutoStart(enabled) {
     }
     
     // 新規設定を実行
+    // Windowsでは openAsHidden は動作しないため、起動引数で制御する
     const settings = {
       openAtLogin: enabled,
-      openAsHidden: enabled // 自動起動時は非表示で開始
+      openAsHidden: enabled, // macOS用
+      args: enabled ? ['--hidden'] : [] // Windows用: 起動引数で最小化起動を制御
     };
-    
+
     console.log('自動起動設定を更新:', settings);
     app.setLoginItemSettings(settings);
     
