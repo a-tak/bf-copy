@@ -212,6 +212,9 @@ function createTray() {
 }
 
 app.whenReady().then(async () => {
+  // 古い自動起動設定（Electron.exe等）が残っている場合はクリーンアップ
+  autoStartManager.cleanupOldAutoStartSettings();
+
   createWindow();
   createTray();
 
