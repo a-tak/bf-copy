@@ -24,9 +24,9 @@ BFカメラから写真・動画をWindows/macOSに自動コピーするElectron
 
 - ビルド担当
 
-## ビルド手順の注意事項
-- **ビルド要求時は必ずインストーラーまで作成する**
-- `npm run build-win`で配布用インストーラー（.exe）を作成
+## ビルド手順の注意事項（ローカル開発用）
+- リリース手順は `.claude/rules/release.md` を参照
+- `npm run build-win`はローカルでの動作確認用のみに使用
 - `npm run pack:win`は開発用（win-unpackedのみ）なので配布時は使用しない
 
 ### ビルドマネージャーエージェントの活用
