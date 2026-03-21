@@ -71,9 +71,14 @@ function cleanupOldAutoStartSettings() {
     if (match) {
       const registeredValue = match[1].trim();
       if (!registeredValue.toLowerCase().includes(currentExecPathLower)) {
+        // 異なるexeパス → 古い設定を削除
         console.log('古い自動起動設定を削除します:', registeredValue);
         execFileSync('reg', ['delete', WIN_REG_KEY, '/v', APP_NAME, '/f']);
         console.log('古い自動起動設定を削除しました（再設定が必要な場合はトレイメニューから行ってください）');
+      } else if (!registeredValue.includes('--hidden')) {
+        // パスは正しいが--hiddenがない → --hidden付きで再登録（旧バージョンからの移行対応）
+        console.log('自動起動設定に--hiddenがないため修復します:', registeredValue);
+        setAutoStartWindowsRegistry(true);
       }
     }
   } catch (e) {

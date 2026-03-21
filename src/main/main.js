@@ -3,6 +3,9 @@ const path = require('path');
 const fs = require('fs-extra');
 const os = require('os');
 
+// 自動起動設定管理モジュール（createWindow前に必要）
+const autoStartManager = require('../utils/auto-start-manager');
+
 let mainWindow;
 let tray = null;
 let isQuiting = false;
@@ -26,12 +29,19 @@ if (!gotTheLock) {
 function createWindow() {
   // 自動起動時（OS起動時）は最小化して開始するかを判定
   // macOS: wasOpenedAsHidden、Windows: --hidden 引数
-  const shouldStartHidden = app.getLoginItemSettings().wasOpenedAsHidden ||
-                            process.argv.includes('--hidden');
+  // フォールバック: 自動起動設定が有効 かつ システム起動後5分以内なら自動起動と判定
+  const hasHiddenArg = process.argv.includes('--hidden');
+  const wasOpenedAsHidden = app.getLoginItemSettings().wasOpenedAsHidden;
+  const isAutoStartBoot = process.platform === 'win32' &&
+                          autoStartManager.getAutoStartStatus().openAtLogin &&
+                          os.uptime() < 300;
+  const shouldStartHidden = wasOpenedAsHidden || hasHiddenArg || isAutoStartBoot;
 
   console.log('起動モード判定:', {
-    wasOpenedAsHidden: app.getLoginItemSettings().wasOpenedAsHidden,
-    hasHiddenArg: process.argv.includes('--hidden'),
+    wasOpenedAsHidden,
+    hasHiddenArg,
+    isAutoStartBoot,
+    osUptime: os.uptime(),
     shouldStartHidden
   });
 
@@ -262,8 +272,7 @@ app.on('activate', () => {
 // TDD実装済みのユーティリティモジュールを使用
 const { loadConfig, saveConfig } = require('../utils/config-manager');
 
-// 自動起動設定管理モジュール
-const autoStartManager = require('../utils/auto-start-manager');
+// 自動起動設定管理モジュール（ファイル上部でrequire済み）
 
 // 設定読み込み
 ipcMain.handle('load-config', async () => {
