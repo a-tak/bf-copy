@@ -57,11 +57,28 @@ function getAutoStartStatusWindowsRegistry() {
 
 /**
  * 古い自動起動設定（Electron.exe等）をクリーンアップ
- * アプリ起動時に呼び出す。現在の実行ファイルと異なるパスが登録されている場合は削除する。
+ * アプリ起動時に呼び出す。
+ * - 現在の実行ファイルと異なるパスが登録されている場合は削除
+ * - Electronが内部的に作成する "electron.app.*" エントリも削除
  */
 function cleanupOldAutoStartSettings() {
   if (process.platform !== 'win32') return;
 
+  // Electronが app.setLoginItemSettings() で作成する "electron.app.*" エントリを削除
+  // これらは --hidden 引数なしで登録されるため、ウィンドウが表示されてしまう
+  const electronAppKeys = [`electron.app.${APP_NAME}`, 'electron.app.Electron'];
+  for (const keyName of electronAppKeys) {
+    try {
+      execFileSync('reg', ['query', WIN_REG_KEY, '/v', keyName], { encoding: 'utf8' });
+      // 存在する場合は削除
+      execFileSync('reg', ['delete', WIN_REG_KEY, '/v', keyName, '/f']);
+      console.log(`Electron内部の自動起動エントリを削除しました: ${keyName}`);
+    } catch (e) {
+      // 存在しない場合は正常
+    }
+  }
+
+  // メインの "BF Copy" エントリを確認・修復
   try {
     const result = execFileSync('reg', ['query', WIN_REG_KEY, '/v', APP_NAME], { encoding: 'utf8' });
     const currentExecPathLower = process.execPath.toLowerCase();
