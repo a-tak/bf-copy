@@ -6,6 +6,12 @@ const fs = require('fs-extra');
 const os = require('os');
 
 describe('設定管理機能', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetModules();
+    jest.dontMock('fs-extra');
+  });
+
   describe('設定ファイルの読み込み', () => {
     test('設定ファイルが存在する場合、正しく読み込める', async () => {
       // 期待される動作:
@@ -27,27 +33,25 @@ describe('設定管理機能', () => {
     test('設定ファイルが存在しない場合、nullを返す', async () => {
       // 期待される動作:
       // 設定ファイルが存在しない場合はnullを返す
-      
-      const { loadConfig } = require('../src/utils/config-manager');
-      
+
       // ファイルが存在しない状況をモック
-      jest.mock('fs-extra', () => ({
+      jest.doMock('fs-extra', () => ({
         pathExists: jest.fn().mockResolvedValue(false),
       }));
-      
+
+      const { loadConfig } = require('../src/utils/config-manager');
       const result = await loadConfig();
       expect(result).toBeNull();
     });
 
     test('設定ファイル読み込みでエラーが発生した場合、nullを返す', async () => {
-      const { loadConfig } = require('../src/utils/config-manager');
-      
       // 読み込みエラーをモック
-      jest.mock('fs-extra', () => ({
+      jest.doMock('fs-extra', () => ({
         pathExists: jest.fn().mockResolvedValue(true),
         readJson: jest.fn().mockRejectedValue(new Error('Read error')),
       }));
-      
+
+      const { loadConfig } = require('../src/utils/config-manager');
       const result = await loadConfig();
       expect(result).toBeNull();
     });
@@ -57,7 +61,13 @@ describe('設定管理機能', () => {
     test('設定を正しく保存できる', async () => {
       // 期待される動作:
       // 設定オブジェクトをJSONファイルとして保存する
-      
+
+      const writeJson = jest.fn().mockResolvedValue(undefined);
+      jest.doMock('fs-extra', () => ({
+        ensureDir: jest.fn().mockResolvedValue(undefined),
+        writeJson
+      }));
+
       const { saveConfig } = require('../src/utils/config-manager');
       
       const config = {
@@ -68,16 +78,20 @@ describe('設定管理機能', () => {
       
       const result = await saveConfig(config);
       expect(result).toBe(true);
+      expect(writeJson).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ convertRw2ToDng: false }),
+        { spaces: 2 }
+      );
     });
 
     test('設定保存でエラーが発生した場合、falseを返す', async () => {
-      const { saveConfig } = require('../src/utils/config-manager');
-      
       // 保存エラーをモック
-      jest.mock('fs-extra', () => ({
+      jest.doMock('fs-extra', () => ({
         ensureDir: jest.fn().mockRejectedValue(new Error('Write error')),
       }));
-      
+
+      const { saveConfig } = require('../src/utils/config-manager');
       const config = { photoDestination: '/invalid/path' };
       const result = await saveConfig(config);
       expect(result).toBe(false);
@@ -97,6 +111,47 @@ describe('設定管理機能', () => {
   });
 
   describe('設定の検証', () => {
+    test('旧設定ファイルにDNG変換オプションがない場合は無効として扱う', () => {
+      const { normalizeConfig } = require('../src/utils/config-manager');
+
+      const legacyConfig = {
+        photoDestination: '/path/to/photos',
+        videoDestination: '/path/to/videos',
+        isFirstRun: false
+      };
+
+      const result = normalizeConfig(legacyConfig);
+      expect(result.convertRw2ToDng).toBe(false);
+    });
+
+    test('保存済みのDNG変換オプションを保持する', () => {
+      const { normalizeConfig } = require('../src/utils/config-manager');
+
+      const config = {
+        photoDestination: '/path/to/photos',
+        videoDestination: '/path/to/videos',
+        isFirstRun: false,
+        convertRw2ToDng: false
+      };
+
+      const result = normalizeConfig(config);
+      expect(result.convertRw2ToDng).toBe(false);
+    });
+
+    test('明示的に有効化されたDNG変換オプションを保持する', () => {
+      const { normalizeConfig } = require('../src/utils/config-manager');
+
+      const config = {
+        photoDestination: '/path/to/photos',
+        videoDestination: '/path/to/videos',
+        isFirstRun: false,
+        convertRw2ToDng: true
+      };
+
+      const result = normalizeConfig(config);
+      expect(result.convertRw2ToDng).toBe(true);
+    });
+
     test('有効な設定オブジェクトを正しく検証する', async () => {
       // 期待される動作:
       // 必要なプロパティが存在することを確認

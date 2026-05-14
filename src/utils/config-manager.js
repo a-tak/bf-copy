@@ -10,7 +10,8 @@ async function loadConfig() {
   
   try {
     if (await fs.pathExists(configPath)) {
-      return await fs.readJson(configPath);
+      const config = await fs.readJson(configPath);
+      return normalizeConfig(config);
     }
     return null;
   } catch (error) {
@@ -27,12 +28,23 @@ async function saveConfig(config) {
   
   try {
     await fs.ensureDir(path.dirname(configPath));
-    await fs.writeJson(configPath, config, { spaces: 2 });
+    await fs.writeJson(configPath, normalizeConfig(config), { spaces: 2 });
     return true;
   } catch (error) {
     console.error('設定保存エラー:', error);
     return false;
   }
+}
+
+function normalizeConfig(config) {
+  if (!config || typeof config !== 'object') {
+    return config;
+  }
+
+  return {
+    ...config,
+    convertRw2ToDng: config.convertRw2ToDng === true
+  };
 }
 
 function getConfigPath() {
@@ -99,6 +111,7 @@ module.exports = {
   loadConfig,
   saveConfig,
   getConfigPath,
+  normalizeConfig,
   validateConfig,
   validatePaths,
 };

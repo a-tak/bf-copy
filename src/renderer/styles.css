@@ -77,6 +77,108 @@ section h3 {
     font-weight: 600;
 }
 
+/* クイックオプション */
+.quick-options {
+    padding: 20px 24px;
+}
+
+.quick-options-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid rgba(45, 55, 72, 0.1);
+    padding-bottom: 12px;
+}
+
+.quick-options-header h3 {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.option-status {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(56, 161, 105, 0.12);
+    color: #2f855a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.option-status.off {
+    background: rgba(113, 128, 150, 0.16);
+    color: #4a5568;
+}
+
+.toggle-option {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: center;
+    cursor: pointer;
+    color: #2d3748;
+}
+
+.toggle-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 52px;
+    height: 30px;
+    border-radius: 999px;
+    background: #a0aec0;
+    transition: background 0.2s ease;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.18);
+}
+
+.toggle-slider::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.toggle-option input:checked + .toggle-slider {
+    background: #38a169;
+}
+
+.toggle-option input:checked + .toggle-slider::after {
+    transform: translateX(22px);
+}
+
+.toggle-option input:focus-visible + .toggle-slider {
+    outline: 3px solid rgba(49, 130, 206, 0.35);
+    outline-offset: 3px;
+}
+
+.toggle-text {
+    display: grid;
+    gap: 4px;
+}
+
+.toggle-title {
+    font-weight: 700;
+}
+
+.toggle-description {
+    color: #718096;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
 /* 設定グループ */
 .setting-group {
     margin-bottom: 20px;

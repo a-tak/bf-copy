@@ -21,8 +21,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFullSizeImage: (imagePath) => ipcRenderer.invoke('get-full-size-image', imagePath),
 
   // ファイルコピー
-  copyFiles: (sourceFolder, photoDestination, videoDestination, folderName, subFolderName) =>
-    ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName, subFolderName),
+  copyFiles: (sourceFolder, photoDestination, videoDestination, folderName, subFolderName, options) =>
+    ipcRenderer.invoke('copy-files', sourceFolder, photoDestination, videoDestination, folderName, subFolderName, options),
 
   // 進行状況イベント
   onCopyProgress: (callback) => ipcRenderer.on('copy-progress', callback),

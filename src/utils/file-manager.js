@@ -101,17 +101,20 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
 }
 
-async function copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, progressCallback, subFolderName = 'BF') {
+async function copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, progressCallback, subFolderName = 'BF', options = {}) {
   // テストで要求されたファイルコピー機能を実装
   const fs = require('fs-extra');
   const path = require('path');
 
   try {
+    const convertRw2ToDng = options.convertRw2ToDng === true;
+
     console.log('コピー開始:', {
       source: sourceFolderPath,
       photoDestination,
       videoDestination,
-      folderName
+      folderName,
+      convertRw2ToDng
     });
 
     // ソースフォルダ名から日付を抽出
@@ -224,7 +227,7 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
     }
 
     // コピー完了後、RW2ファイルを一括でDNGに変換
-    if (rw2FilesToConvert.length > 0) {
+    if (rw2FilesToConvert.length > 0 && convertRw2ToDng) {
       console.log(`RW2ファイル一括変換開始: ${rw2FilesToConvert.length}ファイル`);
 
       try {
@@ -283,6 +286,10 @@ async function copyFiles(sourceFolderPath, photoDestination, videoDestination, f
           error: `変換エラー: ${conversionError.message}`
         });
       }
+    }
+
+    if (rw2FilesToConvert.length > 0 && !convertRw2ToDng) {
+      console.log(`DNG変換はオプションで無効です。RW2ファイルはそのまま保存されました: ${rw2FilesToConvert.length}ファイル`);
     }
 
     console.log('コピー結果:', copyResults);

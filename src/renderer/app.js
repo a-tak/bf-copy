@@ -68,6 +68,9 @@ class SigmaBFCopy {
 
     async loadConfig() {
         this.config = await window.electronAPI.loadConfig();
+        if (this.config) {
+            this.config.convertRw2ToDng = this.config.convertRw2ToDng === true;
+        }
         console.log('設定読み込み:', this.config);
     }
 
@@ -101,6 +104,7 @@ class SigmaBFCopy {
         document.getElementById('refresh-camera').addEventListener('click', () => this.startCameraDetection());
         document.getElementById('change-settings').addEventListener('click', () => this.showSettingsModal());
         document.getElementById('start-copy').addEventListener('click', () => this.startCopy());
+        document.getElementById('convert-rw2-to-dng').addEventListener('change', (event) => this.updateDngConversionOption(event.target.checked));
 
 
         // 設定モーダル
@@ -132,7 +136,8 @@ class SigmaBFCopy {
         this.config = {
             photoDestination,
             videoDestination,
-            isFirstRun: false
+            isFirstRun: false,
+            convertRw2ToDng: false
         };
 
         if (await this.saveConfig()) {
@@ -160,6 +165,35 @@ class SigmaBFCopy {
         if (this.config) {
             document.getElementById('current-photo-dest').textContent = this.config.photoDestination;
             document.getElementById('current-video-dest').textContent = this.config.videoDestination;
+            this.updateDngConversionDisplay();
+        }
+    }
+
+    updateDngConversionDisplay() {
+        const checkbox = document.getElementById('convert-rw2-to-dng');
+        const status = document.getElementById('dng-conversion-status');
+        const enabled = this.config ? this.config.convertRw2ToDng === true : false;
+
+        if (checkbox) {
+            checkbox.checked = enabled;
+        }
+
+        if (status) {
+            status.textContent = `DNG変換: ${enabled ? 'ON' : 'OFF'}`;
+            status.classList.toggle('off', !enabled);
+        }
+    }
+
+    async updateDngConversionOption(enabled) {
+        if (!this.config) {
+            return;
+        }
+
+        this.config.convertRw2ToDng = enabled;
+        this.updateDngConversionDisplay();
+
+        if (await this.saveConfig()) {
+            this.showNotification('success', 'オプション保存', `DNG変換を${enabled ? 'ON' : 'OFF'}にしました`);
         }
     }
 
@@ -389,7 +423,8 @@ class SigmaBFCopy {
                 folderName: folderName,
                 photoDestination: this.config.photoDestination,
                 videoDestination: this.config.videoDestination,
-                subFolderName: subFolderName
+                subFolderName: subFolderName,
+                convertRw2ToDng: this.config.convertRw2ToDng === true
             });
 
             console.log('呼び出しパラメータ:', {
@@ -404,7 +439,8 @@ class SigmaBFCopy {
                 this.config.photoDestination,
                 this.config.videoDestination,
                 folderName,
-                subFolderName
+                subFolderName,
+                { convertRw2ToDng: this.config.convertRw2ToDng === true }
             );
 
             console.log('コピー結果:', result);

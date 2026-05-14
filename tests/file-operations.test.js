@@ -153,6 +153,79 @@ describe('ファイル操作機能', () => {
       expect(result).toBe('photo');
     });
 
+    test('DNG変換オプションが無効の場合、GH7のRW2ファイルを変換せずコピーのみ行う', async () => {
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-dng-option-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+
+      try {
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'raw-file.rw2'), 'rw2 content');
+
+        const result = await copyFiles(
+          sourceFolder,
+          photoDestination,
+          videoDestination,
+          'dng-option-off',
+          null,
+          'GH7',
+          { convertRw2ToDng: false }
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.copiedPhotos).toBe(1);
+        expect(result.convertedRw2).toBe(0);
+        expect(result.errors).toHaveLength(0);
+        expect(result.warnings).toHaveLength(0);
+        expect(await fs.pathExists(path.join(result.photoDestPath, 'raw-file.rw2'))).toBe(true);
+        expect(await fs.pathExists(path.join(result.photoDestPath, 'raw-file.dng'))).toBe(false);
+      } finally {
+        await fs.remove(testDir);
+      }
+    });
+
+    test('DNG変換オプション未指定の場合、GH7のRW2ファイルを変換せずコピーのみ行う', async () => {
+      const { copyFiles } = require('../src/utils/file-manager');
+      const fs = require('fs-extra');
+      const path = require('path');
+      const os = require('os');
+
+      const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bf-copy-dng-default-'));
+      const sourceFolder = path.join(testDir, 'source');
+      const photoDestination = path.join(testDir, 'photos');
+      const videoDestination = path.join(testDir, 'videos');
+
+      try {
+        await fs.ensureDir(sourceFolder);
+        await fs.writeFile(path.join(sourceFolder, 'default-off.rw2'), 'rw2 content');
+
+        const result = await copyFiles(
+          sourceFolder,
+          photoDestination,
+          videoDestination,
+          'dng-default-off',
+          null,
+          'GH7'
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.copiedPhotos).toBe(1);
+        expect(result.convertedRw2).toBe(0);
+        expect(result.errors).toHaveLength(0);
+        expect(result.warnings).toHaveLength(0);
+        expect(await fs.pathExists(path.join(result.photoDestPath, 'default-off.rw2'))).toBe(true);
+        expect(await fs.pathExists(path.join(result.photoDestPath, 'default-off.dng'))).toBe(false);
+      } finally {
+        await fs.remove(testDir);
+      }
+    });
+
 
 
     test('コピー先フォルダ名を正しく生成する（デフォルト）', async () => {

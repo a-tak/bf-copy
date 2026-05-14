@@ -327,13 +327,13 @@ ipcMain.handle('get-full-size-image', async (event, imagePath) => {
 const { copyFiles } = require('../utils/file-manager');
 
 // ファイルコピー（進行状況通知付き）
-ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName, subFolderName) => {
+ipcMain.handle('copy-files', async (event, sourceFolderPath, photoDestination, videoDestination, folderName, subFolderName, options) => {
   try {
     // file-manager.jsの正しい実装を使用してファイルコピー（進行状況コールバック付き）
     const copyResults = await copyFiles(sourceFolderPath, photoDestination, videoDestination, folderName, (progress) => {
       // 進行状況をレンダラープロセスに送信
       mainWindow.webContents.send('copy-progress', progress);
-    }, subFolderName);
+    }, subFolderName, options);
 
     console.log('コピー結果:', copyResults);
     return copyResults;
