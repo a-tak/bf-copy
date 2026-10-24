@@ -1,92 +1,40 @@
-// カメラ検知機能のテスト
-// TDD: まずテストを作成し、期待される動作を定義する
-
 const path = require('path');
+const util = require('util');
 const fs = require('fs-extra');
-
-// テスト対象の関数を独立させるため、main.jsから関数を抽出する必要がある
-// 現在は main.js に直接書かれているので、まずはモジュール化をテストで要求する
-
-describe('カメラ検知機能', () => {
-  describe('Sigma BF カメラの検知', () => {
-    test('DCIMフォルダを持つドライブを検知できる', async () => {
-      // 期待される動作:
-      // 1. システム内のドライブを一覧取得
-      // 2. 各ドライブでDCIMフォルダの存在をチェック
-      // 3. DCIMフォルダが存在するドライブを返す
-
-      const mockDrives = [
-        { drive: 'C', path: 'C:\\', dcimPath: 'C:\\DCIM', label: 'System' },
-        { drive: 'D', path: 'D:\\', dcimPath: 'D:\\DCIM', label: 'SIGMA BF' },
-      ];
-
-      // この関数はまだ存在しない - TDDなので先にテストを書く
-      const { detectCameraWithDCIM } = require('../src/utils/camera-detector');
-
-      const result = await detectCameraWithDCIM();
-
-      // 期待される結果: DCIMフォルダを持つドライブが返される
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('drive');
-      expect(result).toHaveProperty('path');
-      expect(result).toHaveProperty('dcimPath');
-      expect(result).toHaveProperty('label');
-    });
-
-    test('Sigma BFカメラを優先的に検知する', async () => {
-      // 期待される動作:
-      // 複数のDCIMドライブがある場合、ラベルに"sigma"を含むものを優先する
-
-      const { detectSigmaCamera } = require('../src/utils/camera-detector');
-
-      const result = await detectSigmaCamera();
-
-      // Sigma BFカメラが検知された場合
-      if (result) {
-        expect(result.label.toLowerCase()).toContain('sigma');
-      }
-    });
-
-
-
-    test('カメラが見つからない場合はnullを返す', async () => {
-      // 期待される動作:
-      // DCIMフォルダを持つドライブが存在しない場合はnullを返す
-
-      const { detectSigmaCamera } = require('../src/utils/camera-detector');
-
-      // モックでドライブが存在しない状況を作る
-      jest.mock('fs-extra', () => ({
-        stat: jest.fn().mockRejectedValue(new Error('Drive not found')),
-        pathExists: jest.fn().mockResolvedValue(false),
-      }));
-
-      const result = await detectSigmaCamera();
-      expect(result).toBeNull();
-    });
+const { exec } = require('child_process');
+const { detectCameraWithDCIM, detectSigmaCamera, getDriveLabel } = require('../src/utils/camera-detector');
+jest.mock('os', () => ({ platform: jest.fn(() => 'win32') }));
+jest.mock('fs-extra', () => ({ stat: jest.fn(), pathExists: jest.fn() }));
+jest.mock('child_process', () => {
+  const exec = jest.fn();
+  exec[require('util').promisify.custom] = jest.fn();
+  return { exec };
+});
+const run = exec[util.promisify.custom];
+beforeEach(() => {
+  jest.resetAllMocks();
+  require('os').platform.mockReturnValue('win32');
+  fs.stat.mockImplementation(async drive => { if (!['D:\\', 'E:\\'].includes(drive)) throw Error('No drive'); return { isDirectory: () => true }; });
+  fs.pathExists.mockResolvedValue(true);
+  run.mockImplementation(async command => ({ stdout: command.includes("'E:'") ? 'SIGMA BF\n' : 'OTHER CAMERA\n' }));
+});
+describe('カメラ検知機能（実ドライブを使用しない）', () => {
+  test('DCIMフォルダを持つドライブを検知できる', async () => {
+    expect(await detectCameraWithDCIM()).toEqual({ drive:'D', path:'D:\\', dcimPath:path.join('D:\\','DCIM'), label:'OTHER CAMERA' });
   });
-
-  describe('ドライブラベル取得', () => {
-    test('Windowsでドライブラベルを正しく取得する', async () => {
-      // 期待される動作:
-      // PowerShellコマンドでドライブラベルを取得する
-
-      const { getDriveLabel } = require('../src/utils/camera-detector');
-
-      const drivePath = 'D:\\';
-      const result = await getDriveLabel(drivePath);
-
-      // 文字列が返されることを期待
-      expect(typeof result).toBe('string');
-    });
-
-    test('ドライブラベル取得でエラーが発生した場合は空文字を返す', async () => {
-      const { getDriveLabel } = require('../src/utils/camera-detector');
-
-      // 存在しないドライブ
-      const result = await getDriveLabel('Z:\\');
-
-      expect(result).toBe('');
-    });
+  test('複数のDCIMドライブからSigma BFカメラを優先する', async () => {
+    expect(await detectSigmaCamera()).toMatchObject({ drive:'E', label:'SIGMA BF' });
+  });
+  test('カメラが見つからない場合はnullを返す', async () => {
+    fs.pathExists.mockResolvedValue(false);
+    expect(await detectSigmaCamera()).toBeNull();
+  });
+  test('Windowsでドライブラベルを取得して末尾改行を除く', async () => {
+    expect(await getDriveLabel('E:\\')).toBe('SIGMA BF');
+    expect(run).toHaveBeenCalledWith(expect.stringContaining("'E:'"), { encoding:'utf8' });
+  });
+  test('ドライブラベル取得コマンドが失敗したら空文字を返す', async () => {
+    run.mockRejectedValue(new Error('WMI failure'));
+    expect(await getDriveLabel('Z:\\')).toBe('');
   });
 });

@@ -1,39 +1,47 @@
 const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
-const { 
-  initializeThumbnailCache,
-  getCachedThumbnail,
-  setCachedThumbnail,
-  cleanupOrphanedCache,
-  clearAllCache,
-  getCacheStats
-} = require('../src/utils/thumbnail-cache');
+
+// 各テストは別プロセスでの起動と同様に、キャッシュのモジュール状態も分離する。
+function loadFreshCacheModule() {
+  let cache;
+  jest.isolateModules(() => {
+    cache = require('../src/utils/thumbnail-cache');
+  });
+  return cache;
+}
 
 describe('サムネイルキャッシュ機能', () => {
+  const temporaryRoot = path.resolve(os.tmpdir());
+  let testRoot;
   let testCacheDir;
   let testImagePath;
   let testFolderPath;
-
-  beforeAll(async () => {
-    testCacheDir = path.join(os.tmpdir(), 'bf-copy-test-cache');
-    testFolderPath = path.join(__dirname, 'test-images');
-    testImagePath = path.join(testFolderPath, 'test-image.jpg');
-    
-    await fs.ensureDir(testFolderPath);
-    
-    const testImageBuffer = Buffer.from('fake-jpeg-data', 'utf8');
-    await fs.writeFile(testImagePath, testImageBuffer);
-  });
-
-  afterAll(async () => {
-    await fs.remove(testCacheDir);
-    await fs.remove(testFolderPath);
-  });
+  let initializeThumbnailCache;
+  let getCachedThumbnail;
+  let setCachedThumbnail;
+  let cleanupOrphanedCache;
+  let clearAllCache;
+  let getCacheStats;
 
   beforeEach(async () => {
-    await fs.remove(testCacheDir);
+    testRoot = await fs.mkdtemp(path.join(temporaryRoot, 'bf-copy-cache-test-'));
+    testCacheDir = path.join(testRoot, 'cache');
+    testFolderPath = path.join(testRoot, 'images');
+    testImagePath = path.join(testFolderPath, 'test-image.jpg');
+    await fs.ensureDir(testFolderPath);
+    await fs.writeFile(testImagePath, Buffer.from('fake-jpeg-data', 'utf8'));
+
+    ({ initializeThumbnailCache, getCachedThumbnail, setCachedThumbnail,
+      cleanupOrphanedCache, clearAllCache, getCacheStats } = loadFreshCacheModule());
     await initializeThumbnailCache(testCacheDir);
+  });
+
+  afterEach(async () => {
+    // 削除対象はこのテストが mkdtemp で作成したディレクトリだけ。
+    expect(path.dirname(testRoot)).toBe(temporaryRoot);
+    expect(path.basename(testRoot)).toMatch(/^bf-copy-cache-test-/);
+    await fs.remove(testRoot);
   });
 
   describe('キャッシュ初期化', () => {
@@ -44,6 +52,29 @@ describe('サムネイルキャッシュ機能', () => {
     test('メタデータファイルが作成される', async () => {
       const metaFile = path.join(testCacheDir, 'cache-meta.json');
       expect(await fs.pathExists(metaFile)).toBe(true);
+    });
+  });
+
+  describe('初期化と再起動時の状態', () => {
+    test('初期化を繰り返しても保存済みキャッシュは保持される', async () => {
+      const thumbnailData = 'data:image/webp;base64,existing-thumbnail';
+      await setCachedThumbnail(testImagePath, thumbnailData);
+
+      await initializeThumbnailCache(testCacheDir);
+
+      expect(await getCachedThumbnail(testImagePath)).toBe(thumbnailData);
+      expect((await getCacheStats()).totalEntries).toBe(1);
+    });
+
+    test('新しいモジュールはディスクのメタデータからキャッシュを復元する', async () => {
+      const thumbnailData = 'data:image/webp;base64,persisted-thumbnail';
+      await setCachedThumbnail(testImagePath, thumbnailData);
+      const restarted = loadFreshCacheModule();
+
+      await restarted.initializeThumbnailCache(testCacheDir);
+
+      expect(await restarted.getCachedThumbnail(testImagePath)).toBe(thumbnailData);
+      expect((await restarted.getCacheStats()).totalEntries).toBe(1);
     });
   });
 

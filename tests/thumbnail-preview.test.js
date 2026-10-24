@@ -92,11 +92,14 @@ describe('サムネイルプレビュー機能', () => {
       
       const { resizeImageToThumbnail } = require('../src/utils/file-manager');
       
-      const mockImageBuffer = Buffer.from('mock-image-data');
+      const sharp = require('sharp');
+      const mockImageBuffer = await sharp({ create: { width: 300, height: 200, channels: 3, background: '#336699' } }).png().toBuffer();
       const result = await resizeImageToThumbnail(mockImageBuffer);
       
       expect(typeof result).toBe('string');
       expect(result).toMatch(/^data:image\/jpeg;base64,/);
+      const metadata = await sharp(Buffer.from(result.split(',')[1], 'base64')).metadata();
+      expect(metadata).toMatchObject({ format: 'jpeg', width: 150, height: 100 });
     });
 
     test('破損画像ファイルを適切に処理する', async () => {

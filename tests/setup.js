@@ -11,5 +11,5 @@ global.console = {
 };
 
 // テスト用のグローバル設定
-global.window = {};
-global.document = {};
+if (typeof global.window === 'undefined') global.window = {};
+if (typeof global.document === 'undefined') global.document = {};

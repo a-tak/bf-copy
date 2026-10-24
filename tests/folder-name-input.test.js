@@ -1,10 +1,9 @@
+/** @jest-environment jsdom */
 // フォルダ名入力フィールドのダイアログ干渉問題のテスト
 // TDD: まずテストを作成し、期待される動作を定義する
 // Issue #24: 初回起動時の確認ダイアログが表示されるとフォルダ名が入力できなくなる
 
-/**
- * @jest-environment jsdom
- */
+
 
 describe('フォルダ名入力フィールドのダイアログ干渉問題', () => {
   let mockWindow;
@@ -31,11 +30,7 @@ describe('フォルダ名入力フィールドのダイアログ干渉問題', (
     global.alert = jest.fn();
     
     // Electron APIをモック化
-    global.window = {
-      electronAPI: {
-        setAutoStart: jest.fn(),
-      }
-    };
+    window.electronAPI = { setAutoStart: jest.fn() };
   });
 
   afterEach(() => {
@@ -144,13 +139,13 @@ describe('フォルダ名入力フィールドのダイアログ干渉問題', (
       // 設定モーダルが表示されてもメインのフォルダ名フィールドに影響しない
       
       // モーダルDOMを追加
-      document.body.innerHTML += `
+      document.body.insertAdjacentHTML('beforeend', `
         <div id="settings-modal" class="modal">
           <div class="modal-content">
             <input type="text" id="settings-folder-input">
           </div>
         </div>
-      `;
+      `);
       
       const settingsModal = document.getElementById('settings-modal');
       const settingsInput = document.getElementById('settings-folder-input');
