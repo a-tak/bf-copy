@@ -1,0 +1,50 @@
+name: Compatibility validation
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Existing Jest suite (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+          cache: npm
+      - run: npm ci
+      - run: npm test -- --runInBand
+
+  build:
+    name: Electron smoke and build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+          cache: npm
+      - run: npm ci
+      - name: Isolated Electron preload, IPC and sharp check
+        run: npm run test:electron-smoke
+      - name: Build Windows without publication
+        if: runner.os == 'Windows'
+        run: npm run build-win -- --publish never
+      - name: Build macOS without publication
+        if: runner.os == 'macOS'
+        run: npm run build-mac -- --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-build-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+          retention-days: 7

@@ -9,8 +9,9 @@ const path = require('path');
 describe('画像拡大表示モーダル機能', () => {
   let app;
   let mockThumbnails;
+  let imageLoads;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     // HTMLファイルの読み込み
     const htmlPath = path.join(__dirname, '../src/renderer/index.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
@@ -31,15 +32,24 @@ describe('画像拡大表示モーダル機能', () => {
     // Electron API のモック
     global.window = window;
     window.electronAPI = {
-      getFolderThumbnails: jest.fn()
+      getFolderThumbnails: jest.fn(),
+      loadConfig: jest.fn().mockResolvedValue(null),
+      getAppVersion: jest.fn().mockResolvedValue(require('../package.json').version),
+      onCopyProgress: jest.fn(), onAskAutoStart: jest.fn(), onRefreshCamera: jest.fn(), onCameraConnected: jest.fn(),
+      getFullSizeImage: jest.fn()
     };
 
     // アプリケーションのセットアップ
     require('../src/renderer/app.js');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await new Promise(resolve => setTimeout(resolve, 0));
     app = window.currentApp;
   });
 
   beforeEach(() => {
+    imageLoads = [];
+    global.Image = jest.fn().mockImplementation(() => { const image = {}; imageLoads.push(image); return image; });
+    window.electronAPI.getFullSizeImage.mockImplementation(() => new Promise(() => {}));
     // モックデータのセットアップ
     mockThumbnails = [
       {
@@ -70,11 +80,7 @@ describe('画像拡大表示モーダル機能', () => {
   });
 
   afterEach(() => {
-    // イベントリスナーのクリーンアップ
-    if (app && app.modalKeyboardHandler) {
-      document.removeEventListener('keydown', app.modalKeyboardHandler);
-      app.modalKeyboardHandler = null;
-    }
+    app.closeImageModal();
   });
 
   describe('モーダル表示機能', () => {
@@ -229,6 +235,16 @@ describe('画像拡大表示モーダル機能', () => {
   });
 
   describe('キーボードショートカット機能', () => {
+    test('閉じて再表示しても矢印キーとEscapeが一度だけ動作する', () => {
+      for (let i = 0; i < 2; i++) {
+        app.openImageModal(mockThumbnails, 0, '/mock/path');
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+        expect(app.currentImageIndex).toBe(1);
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        expect(document.getElementById('image-modal').classList.contains('hidden')).toBe(true);
+        expect(app.currentThumbnails).toBeNull();
+      }
+    });
     test('ESCキーでモーダルが閉じる', () => {
       app.openImageModal(mockThumbnails, 0, '/mock/path');
       const modal = document.getElementById('image-modal');
@@ -319,15 +335,18 @@ describe('画像拡大表示モーダル機能', () => {
       expect(loadingSpinner.classList.contains('hidden')).toBe(true);
     });
 
-    test('画像読み込み成功時の処理', () => {
+    test('画像読み込み成功時の処理', async () => {
+      window.electronAPI.getFullSizeImage.mockResolvedValue('data:image/jpeg;base64,full-size-test');
       app.openImageModal(mockThumbnails, 0, '/mock/path');
       
       const modalImage = document.getElementById('modal-image');
       const loadingSpinner = document.getElementById('image-loading');
       
       // 画像読み込み成功をシミュレート
-      const loadEvent = new Event('load');
-      modalImage.dispatchEvent(loadEvent);
+      await Promise.resolve();
+      expect(imageLoads).toHaveLength(1);
+      imageLoads[0].onload();
+      expect(modalImage.src).toBe('data:image/jpeg;base64,full-size-test');
       
       // ローディングが非表示になり、画像が表示される
       expect(loadingSpinner.classList.contains('hidden')).toBe(true);

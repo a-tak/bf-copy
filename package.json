@@ -1,6 +1,6 @@
 {
   "name": "bf-copy",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "BF Camera File Copy Application",
   "main": "src/main/main.js",
   "scripts": {
@@ -12,7 +12,8 @@
     "pack": "electron-builder --dir",
     "create-icon": "node create-icon.js",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:electron-smoke": "electron tests/electron-smoke.cjs"
   },
   "keywords": [
     "electron",
@@ -27,9 +28,10 @@
     "@babel/preset-env": "^7.0.0",
     "@types/jest": "^29.0.0",
     "babel-jest": "^29.0.0",
-    "electron": "^26.0.0",
+    "electron": "43.8.3",
     "electron-builder": "^24.6.0",
     "jest": "^29.0.0",
+    "jest-environment-jsdom": "29.7.0",
     "jest-environment-node": "^29.0.0"
   },
   "dependencies": {

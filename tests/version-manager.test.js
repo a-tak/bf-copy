@@ -17,8 +17,7 @@ describe('Version Manager', () => {
     expect(typeof packageJson.version).toBe('string');
     expect(packageJson.version).toMatch(/^\d+\.\d+\.\d+$/);
     
-    // 現在のバージョンが1.0.6であることを確認
-    expect(packageJson.version).toBe('1.0.6');
+    // リリース番号を固定せず、配布メタデータの形式を検証する。
   });
 
   test('バージョン取得関数が正しく動作する', () => {
@@ -31,6 +30,6 @@ describe('Version Manager', () => {
     expect(version).toBeDefined();
     expect(typeof version).toBe('string');
     expect(version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(version).toBe('1.0.6');
+    expect(version).toBe(require('../package.json').version);
   });
 });

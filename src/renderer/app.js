@@ -686,6 +686,8 @@ class SigmaBFCopy {
         if (!this.modalEventListenersAdded) {
             this.setupModalEventListeners();
             this.modalEventListenersAdded = true;
+        } else if (this.modalKeyboardHandler) {
+            document.addEventListener('keydown', this.modalKeyboardHandler);
         }
 
         // 背景スクロールを無効化
@@ -794,7 +796,7 @@ class SigmaBFCopy {
         // キーボードイベントリスナーを削除
         if (this.modalKeyboardHandler) {
             document.removeEventListener('keydown', this.modalKeyboardHandler);
-            this.modalKeyboardHandler = null;
+            // 次回表示時に同じハンドラーを再登録し、ボタン側は重複登録しない。
         }
 
         // データをクリア
